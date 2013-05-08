@@ -17,7 +17,9 @@ import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 
 /**
- * @author eldawy
+ * A UDF that returns the area of a geometry as calculated by
+ * {@link Geometry#getArea()}
+ * @author Ahmed Eldawy
  *
  */
 public class ST_Area extends EvalFunc<Double> {
