@@ -25,34 +25,41 @@ import org.apache.pig.data.Tuple;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
 
-import edu.umn.cs.spig.ST_Area;
+import edu.umn.cs.spig.GeometryParser;
+import edu.umn.cs.spig.ST_Union;
 
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestST_Area extends TestCase {
+public class TestST_Union extends TestCase {
   
   private ArrayList<Geometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestST_Area() {
-    GeometryFactory geometryFactory = new GeometryFactory();
-    Coordinate[] coordinates = new Coordinate[5];
-    coordinates[0] = new Coordinate(0, 0);
-    coordinates[1] = new Coordinate(0, 3);
-    coordinates[2] = new Coordinate(4, 5);
-    coordinates[3] = new Coordinate(10, 0);
-    coordinates[4] = new Coordinate(0, 0);
-    LinearRing line = geometryFactory.createLinearRing(coordinates);
+  public TestST_Union() {
     geometries = new ArrayList<Geometry>();
-    geometries.add(geometryFactory.createPolygon(line, null));
-    
+    GeometryFactory geometryFactory = new GeometryFactory();
+
+    // Create polygons
+    geometries.add(geometryFactory.createPolygon(
+        geometryFactory.createLinearRing(new Coordinate[] {
+            new Coordinate(0, 0), new Coordinate(6, 0), new Coordinate(0, 5),
+            new Coordinate(0, 0) }), null));
+    geometries.add(geometryFactory.createPolygon(
+        geometryFactory.createLinearRing(new Coordinate[] {
+            new Coordinate(2, 2), new Coordinate(7, 2), new Coordinate(2, 6),
+            new Coordinate(2, 2) }), null));
+    geometries.add(geometryFactory.createPolygon(
+        geometryFactory.createLinearRing(new Coordinate[] {
+            new Coordinate(3, -2), new Coordinate(8, -1), new Coordinate(8, 4),
+            new Coordinate(3, -2) }), null));
+
     data = new ArrayList<String[]>();
     for (int i = 0; i < geometries.size(); i++) {
       data.add(new String[] {Integer.toString(i), geometries.get(i).toText()});
@@ -64,18 +71,28 @@ public class TestST_Area extends TestCase {
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
     String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
-      "B = FOREACH A GENERATE "+ST_Area.class.getName()+"(geom);";
+      "B = GROUP A ALL;\n" +
+      "C = FOREACH B GENERATE "+ST_Union.class.getName()+"(A.geom);";
     pig.registerQuery(query);
-    Iterator<?> it = pig.openIterator("B");
-    Iterator<Geometry> geoms = geometries.iterator();
-    while (it.hasNext() && geoms.hasNext()) {
+    Iterator<?> it = pig.openIterator("C");
+    
+    // Calculate the union outside Pig
+    GeometryFactory geometryFactory = new GeometryFactory();
+    GeometryCollection all_geoms = geometryFactory.createGeometryCollection(
+        geometries.toArray(new Geometry[geometries.size()]));
+    Geometry true_union = all_geoms.buffer(0);
+    
+    int output_size = 0;
+    
+    while (it.hasNext()) {
       Tuple tuple = (Tuple) it.next();
-      Geometry geom = geoms.next();
       if (tuple == null)
         break;
-      Double area = (Double) tuple.get(0);
-      assertEquals(geom.getArea(), area);
+      output_size++;
+      Geometry calculated_union = new GeometryParser().parse(tuple.get(0));
+      assertTrue(true_union.equals(calculated_union));
     }
+    assertEquals(1, output_size);
   }
 
 }
