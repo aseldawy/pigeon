@@ -14,6 +14,7 @@ package edu.umn.cs.spig;
 
 import java.io.IOException;
 
+import org.apache.pig.Accumulator;
 import org.apache.pig.Algebraic;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.backend.executionengine.ExecException;
@@ -35,7 +36,8 @@ import com.vividsolutions.jts.io.WKBWriter;
  * @author Ahmed Eldawy
  *
  */
-public class ST_Union extends EvalFunc<DataByteArray> implements Algebraic {
+public class ST_Union extends EvalFunc<DataByteArray> implements Algebraic,
+    Accumulator<DataByteArray> {
   
   private static final GeometryParser geometryParser = new GeometryParser();
   private static final WKBWriter wkbWriter = new WKBWriter();
@@ -102,5 +104,39 @@ public class ST_Union extends EvalFunc<DataByteArray> implements Algebraic {
     GeometryCollection geom_collection =
         new GeometryFactory().createGeometryCollection(all_geoms);
     return geom_collection.buffer(0);
+  }
+
+  Geometry partialUnion;
+  GeometryParser geomParser = new GeometryParser();
+  GeometryFactory geometryFactory = new GeometryFactory();
+  
+  @Override
+  public void accumulate(Tuple b) throws IOException {
+    try {
+      // Union all passed elements along with the union we might currently have
+      DataBag bag = (DataBag) b.get(0);
+      Geometry[] all_geoms = new Geometry[(int) bag.size()
+          + (partialUnion == null ? 0 : 1)];
+      int i = 0;
+      if (partialUnion != null)
+        all_geoms[i++] = partialUnion;
+      for (Tuple t : bag) {
+        Geometry geom = geomParser.parse(t.get(0));
+        all_geoms[i++] = geom;
+      }
+      partialUnion = geometryFactory.createGeometryCollection(all_geoms).buffer(0);
+    } catch (ParseException e) {
+      throw new IOException("Error parsing object: "+b, e);
+    }
+  }
+
+  @Override
+  public DataByteArray getValue() {
+    return new DataByteArray(wkbWriter.write(partialUnion));
+  }
+
+  @Override
+  public void cleanup() {
+    partialUnion = null;
   }
 }
