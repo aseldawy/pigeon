@@ -89,7 +89,7 @@ public class TestST_Union extends TestCase {
       if (tuple == null)
         break;
       output_size++;
-      Geometry calculated_union = new GeometryParser().parse(tuple.get(0));
+      Geometry calculated_union = new GeometryParser().parseGeom(tuple.get(0));
       assertTrue(true_union.equals(calculated_union));
     }
     assertEquals(1, output_size);

@@ -46,38 +46,38 @@ public class TestGeometryParser extends TestCase {
 
   public void testShouldParseWKT() throws Exception {
     String wkt = polygon.toString();
-    Geometry parsed = geometry_parser.parse(wkt);
+    Geometry parsed = geometry_parser.parseGeom(wkt);
     assertTrue(polygon.equals(parsed));
   }
 
   public void testShouldParseHexString() throws Exception {
     byte[] binary = new WKBWriter().write(polygon);
     String hex = WKBWriter.bytesToHex(binary);
-    Geometry parsed = geometry_parser.parse(hex);
+    Geometry parsed = geometry_parser.parseGeom(hex);
     assertTrue(polygon.equals(parsed));
   }
   
   public void testShouldParseWKB() throws Exception {
     byte[] binary = new WKBWriter().write(polygon);
     DataByteArray barray = new DataByteArray(binary);
-    Geometry parsed = geometry_parser.parse(barray);
+    Geometry parsed = geometry_parser.parseGeom(barray);
     assertTrue(polygon.equals(parsed));
   }
   
   public void testShouldParseWKTEncodedInBinary() throws Exception {
     String wkt = polygon.toString();
     DataByteArray barray = new DataByteArray(wkt);
-    Geometry parsed = geometry_parser.parse(barray);
+    Geometry parsed = geometry_parser.parseGeom(barray);
     assertTrue(polygon.equals(parsed));
   }
 
   public void testShouldReturnNullOnGarbageText() throws Exception {
-    Geometry parsed = geometry_parser.parse("asdfasdf");
+    Geometry parsed = geometry_parser.parseGeom("asdfasdf");
     assertNull(parsed);
   }
 
   public void testShouldReturnNullOnGarbageBinary() throws Exception {
-    Geometry parsed = geometry_parser.parse(new DataByteArray(new byte[] {0, 1, 2, 3}));
+    Geometry parsed = geometry_parser.parseGeom(new DataByteArray(new byte[] {0, 1, 2, 3}));
     assertNull(parsed);
   }
 }

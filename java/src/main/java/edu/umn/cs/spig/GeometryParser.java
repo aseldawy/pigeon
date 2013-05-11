@@ -40,7 +40,7 @@ public class GeometryParser {
   private final WKTReader wkt_reader = new WKTReader();
   private final WKBReader wkb_reader = new WKBReader();
   
-  public Geometry parse(Object o) throws ParseException {
+  public Geometry parseGeom(Object o) throws ParseException {
     Geometry geom = null;
     if (o instanceof DataByteArray) {
       byte[] bytes = ((DataByteArray) o).get();
@@ -73,5 +73,15 @@ public class GeometryParser {
       }
     }
     return geom;
+  }
+  
+  public static double parseDouble(Object o) {
+    if (o instanceof Integer)
+      return (Integer)o;
+    if (o instanceof Double)
+      return (Double)o;
+    if (o instanceof DataByteArray)
+      return Double.parseDouble(new String(((DataByteArray) o).get()));
+    throw new RuntimeException("Cannot parse "+o+" into double");
   }
 }

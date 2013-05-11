@@ -97,7 +97,7 @@ public class ST_Union extends EvalFunc<DataByteArray> implements Algebraic,
     Geometry[] all_geoms = new Geometry[(int) values.size()];
     int i = 0;
     for (Tuple one_geom : values) {
-      all_geoms[i++] = geometryParser.parse(one_geom.get(0));
+      all_geoms[i++] = geometryParser.parseGeom(one_geom.get(0));
     }
     
     // Do a union of all_geometries in the recommended way (using buffer(0))
@@ -121,7 +121,7 @@ public class ST_Union extends EvalFunc<DataByteArray> implements Algebraic,
       if (partialUnion != null)
         all_geoms[i++] = partialUnion;
       for (Tuple t : bag) {
-        Geometry geom = geomParser.parse(t.get(0));
+        Geometry geom = geomParser.parseGeom(t.get(0));
         all_geoms[i++] = geom;
       }
       partialUnion = geometryFactory.createGeometryCollection(all_geoms).buffer(0);
