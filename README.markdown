@@ -68,6 +68,7 @@ Contribution
 Pigeon is open source and licensed under the Apache open source license. Your
 contribution is highly welcome and appreciated. Here is a simple guideline of
 how to contribute.
+
 1. Clone your own copy of the source code or fork the project in github.
 2. Pickup an issue from the list of issues associated with the project.
 3. Write a test case for the new functionality and make sure it fails.
