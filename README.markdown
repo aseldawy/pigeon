@@ -1,8 +1,8 @@
-SPig
-====
+Pigeon
+======
 
-SPig is a spatial extension to Pig that allows it to process spatial data.
-All functionalities in SPig are introduced as user-defined functions (UDFS)
+Pigeon is a spatial extension to Pig that allows it to process spatial data.
+All functionalities in Pigeon are introduced as user-defined functions (UDFS)
 which makes it unobtrusive and allows it to work with your existing systems.
 All the spatial functionality is supported by Java Topology Suite
 [JTS](http://www.vividsolutions.com/jts/)
@@ -11,7 +11,7 @@ a native Java open source library for spatial functionality licensed under LGPL.
 
 Our target is to have something like [PostGIS](http://postgis.net/) but for Pig
 instead of PostgreSQL. We use the same function names to make it easier for
-existing users to use SPig. Here is an example the computes the union of all
+existing users to use Pigeon. Here is an example the computes the union of all
 ZIP codes in each city. 
     zip_codes = LOAD 'zips' AS (zip, city, geom);
     zip_by_city = GROUP zip_codes BY city;
@@ -22,7 +22,7 @@ ZIP codes in each city.
 Data types
 ==========
 Currently, Pig does not support the creation of custom data types. This is not
-good for SPig because we wanted to have our own data type (Geometry) similar to
+good for Pigeon because we wanted to have our own data type (Geometry) similar to
 PostGIS. As a work around, we use the more generic type `bytearray` as our main
 data type. All conversions happen from `bytearray` to `Geometry` and vice-verse on
 the fly while the function is executed. If a function expects an input of type
@@ -34,7 +34,7 @@ able to add custom data types so that we have a cleaner extension.
 
 How to compile
 ==============
-SPig requires the LGPL library Java Topology Suite (JTS) to compile. You need to
+Pigeon requires the LGPL library Java Topology Suite (JTS) to compile. You need to
 download a recent version of JTS and add it to the classpath of your Java compiler
 to be able to compile the code. Of course you also need Pig classes to be available
 in the classpath. The current code is tested against JTS 1.8 and Pig 0.11.1.
@@ -45,9 +45,9 @@ can create a jar file out of it and REGISTER it in your Pig scripts.
 
 How to use
 ==========
-To use SPig in your Pig scripts, you need to REGISTER the jar file in your Pig
+To use Pigeon in your Pig scripts, you need to REGISTER the jar file in your Pig
 script. Then you can use the spatial functionality in your script as you cdo with
-normal functionality. Here are some simple examples on how to use SPig.
+normal functionality. Here are some simple examples on how to use Pigeon.
 
 Let's say you have a trajectory in the form (latitude, longitude, timestamp). We need to
 for a Linestring out of this trajectory when points in this linestring are sorted
@@ -62,7 +62,7 @@ by timestamp.
 
 Contribution
 ============
-SPig is open source and licensed under the Apache open source license. Your
+Pigeon is open source and licensed under the Apache open source license. Your
 contribution is highly welcome and appreciated. Here is a simple guideline of
 how to contribute.
 1. Clone your own copy of the source code or fork the project in github.
@@ -76,7 +76,7 @@ how to contribute.
 8. We will revise the submitted patch and merge it with the code when done.
 
 When writing the test, keep in mind that we are not testing Pig or JTS. We are
-testing SPig which is a wrapper around JTS. For example, you don't have to test
+testing Pigeon which is a wrapper around JTS. For example, you don't have to test
 all the special cases of polygons if implementing an intersection function.
 All what we want is to make sure that you call the right function in JTS and
 return the output in the correct format. 

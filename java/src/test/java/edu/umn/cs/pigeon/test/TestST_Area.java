@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.spig.test;
+package edu.umn.cs.pigeon.test;
 
 import static org.apache.pig.ExecType.LOCAL;
 
@@ -28,8 +28,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 
-import edu.umn.cs.spig.ST_Area;
-
+import edu.umn.cs.pigeon.ST_Area;
 
 /**
  * @author Ahmed Eldawy

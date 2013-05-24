@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.spig;
+package edu.umn.cs.pigeon;
 
 import java.io.IOException;
 
@@ -20,18 +20,15 @@ import org.apache.pig.data.Tuple;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBWriter;
 
 /**
- * Returns the Well-Known Binary (WKB) representation of a geometry object
- * represented as hex string.
+ * Returns the Well-Known Text (WKT) representation of a geometry object.
  * @author Ahmed Eldawy
  *
  */
-public class ST_AsHex extends EvalFunc<String> {
+public class ST_AsText extends EvalFunc<String> {
 
   private GeometryParser geometryParser = new GeometryParser();
-  private WKBWriter wkbWriter = new WKBWriter();
   
   @Override
   public String exec(Tuple t) throws IOException {
@@ -39,8 +36,7 @@ public class ST_AsHex extends EvalFunc<String> {
       if (t.size() != 1)
         throw new IOException("ST_AsText expects one geometry argument");
       Geometry geom = geometryParser.parseGeom(t.get(0));
-      byte[] wkb = wkbWriter.write(geom);
-      return WKBWriter.bytesToHex(wkb);
+      return geom.toText();
     } catch (ParseException e) {
       throw new IOException("Error parsing object "+t, e);
     }

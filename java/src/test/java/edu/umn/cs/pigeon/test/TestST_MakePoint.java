@@ -10,7 +10,7 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
-package edu.umn.cs.spig.test;
+package edu.umn.cs.pigeon.test;
 
 import static org.apache.pig.ExecType.LOCAL;
 
@@ -29,7 +29,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.WKBWriter;
 
-import edu.umn.cs.spig.ST_MakePoint;
+import edu.umn.cs.pigeon.ST_MakePoint;
 
 /**
  * @author Ahmed Eldawy

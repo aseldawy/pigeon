@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-package edu.umn.cs.spig.test;
-
+package edu.umn.cs.pigeon.test;
 
 import junit.framework.TestCase;
 
@@ -25,7 +23,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.io.WKBWriter;
 
-import edu.umn.cs.spig.GeometryParser;
+import edu.umn.cs.pigeon.GeometryParser;
 
 public class TestGeometryParser extends TestCase {
   

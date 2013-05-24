@@ -11,46 +11,39 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.spig;
+package edu.umn.cs.pigeon;
 
 import java.io.IOException;
 
 import org.apache.pig.EvalFunc;
-import org.apache.pig.data.DataBag;
-import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBWriter;
 
 /**
- * Generates a geometry of type LineString out of a bag of points.
+ * Returns the Well-Known Binary (WKB) representation of a geometry object
+ * represented as hex string.
  * @author Ahmed Eldawy
+ *
  */
-public class ST_MakeLine extends EvalFunc<DataByteArray>{
-  
-  private GeometryFactory geometryFactory = new GeometryFactory();
+public class ST_AsHex extends EvalFunc<String> {
+
   private GeometryParser geometryParser = new GeometryParser();
   private WKBWriter wkbWriter = new WKBWriter();
-
+  
   @Override
-  public DataByteArray exec(Tuple b) throws IOException {
-    DataBag points = (DataBag) b.get(0);
-    Coordinate[] coordinates = new Coordinate[(int) points.size()];
-    int i = 0;
-    for (Tuple t : points) {
-      try {
-        Geometry point = geometryParser.parseGeom(t.get(0));
-        coordinates[i++] = point.getCoordinate();
-      } catch (ParseException e) {
-        throw new IOException("Error parsing "+t.get(0), e);
-      }
+  public String exec(Tuple t) throws IOException {
+    try {
+      if (t.size() != 1)
+        throw new IOException("ST_AsText expects one geometry argument");
+      Geometry geom = geometryParser.parseGeom(t.get(0));
+      byte[] wkb = wkbWriter.write(geom);
+      return WKBWriter.bytesToHex(wkb);
+    } catch (ParseException e) {
+      throw new IOException("Error parsing object "+t, e);
     }
-    Geometry line = geometryFactory.createLineString(coordinates);
-    return new DataByteArray(wkbWriter.write(line));
   }
 
 }

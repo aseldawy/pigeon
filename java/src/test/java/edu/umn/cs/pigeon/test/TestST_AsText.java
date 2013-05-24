@@ -11,56 +11,50 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.spig.test;
+package edu.umn.cs.pigeon.test;
 
 import static org.apache.pig.ExecType.LOCAL;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
 
 import org.apache.pig.PigServer;
-import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.vividsolutions.jts.geom.LinearRing;
 
-import edu.umn.cs.spig.ST_MakeLine;
-
+import edu.umn.cs.pigeon.ST_AsText;
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestST_MakeLine extends TestCase {
+public class TestST_AsText extends TestCase {
   
   private ArrayList<Geometry> geometries;
   private ArrayList<String[]> data;
-  private WKBWriter wkbWriter = new WKBWriter();
   
   
-  public TestST_MakeLine() {
+  public TestST_AsText() {
     GeometryFactory geometryFactory = new GeometryFactory();
+    Coordinate[] coordinates = new Coordinate[5];
+    coordinates[0] = new Coordinate(0, 0);
+    coordinates[1] = new Coordinate(0, 3);
+    coordinates[2] = new Coordinate(4, 5);
+    coordinates[3] = new Coordinate(10, 0);
+    coordinates[4] = new Coordinate(0, 0);
+    LinearRing line = geometryFactory.createLinearRing(coordinates);
     geometries = new ArrayList<Geometry>();
-    geometries.add(geometryFactory.createLineString(new Coordinate[] {
-        new Coordinate(0, 0), new Coordinate(0, 3), new Coordinate(4, 5),
-        new Coordinate(10, 0) }));
-    geometries.add(geometryFactory.createLineString(new Coordinate[] {
-        new Coordinate(5, 6), new Coordinate(10, 3), new Coordinate(7, 13)}));
+    geometries.add(geometryFactory.createPolygon(line, null));
     
     data = new ArrayList<String[]>();
-    for (int i_geom = 0; i_geom < geometries.size(); i_geom++) {
-      Coordinate[] coordinates = geometries.get(i_geom).getCoordinates();
-      for (int i_point = 0; i_point < coordinates.length; i_point++) {
-        Point point = geometryFactory.createPoint(coordinates[i_point]);
-        data.add(new String[] {Integer.toString(i_geom), Integer.toString(i_point), point.toText()});
-      }
+    for (int i = 0; i < geometries.size(); i++) {
+      data.add(new String[] {Integer.toString(i), geometries.get(i).toText()});
     }
   }
   
@@ -68,23 +62,19 @@ public class TestST_MakeLine extends TestCase {
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
-    String query = "A = LOAD 'file:" + datafile + "' as (geom_id, point_pos, point);\n" +
-      "B = ORDER A BY point_pos;" +
-      "C = GROUP B BY geom_id;" +
-      "D = FOREACH C GENERATE group, "+ST_MakeLine.class.getName()+"(B.point);";
+    String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
+      "B = FOREACH A GENERATE "+ST_AsText.class.getName()+"(geom);";
     pig.registerQuery(query);
-    Iterator<?> it = pig.openIterator("D");
+    Iterator<?> it = pig.openIterator("B");
     Iterator<Geometry> geoms = geometries.iterator();
-    int count = 0;
     while (it.hasNext() && geoms.hasNext()) {
       Tuple tuple = (Tuple) it.next();
       Geometry geom = geoms.next();
       if (tuple == null)
         break;
-      assertTrue(Arrays.equals(wkbWriter.write(geom), ((DataByteArray)tuple.get(1)).get()));
-      count++;
+      String wkt = (String) tuple.get(0);
+      assertEquals(geom.toText(), wkt);
     }
-    assertEquals(geometries.size(), count);
   }
 
 }

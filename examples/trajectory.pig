@@ -1,7 +1,7 @@
-REGISTER spig.jar;
+REGISTER pigeon.jar;
 REGISTER jts-1.8.jar;
 
-IMPORT 'spig_import.pig';
+IMPORT 'pigeon_import.pig';
 
 points = LOAD 'trajectory.tsv' AS (type, time: datetime, lat:double, lon:double);
 s_points = FOREACH points GENERATE ST_MakePoint(lat, lon) AS point, time;
