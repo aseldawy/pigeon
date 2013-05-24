@@ -32,7 +32,7 @@ import com.vividsolutions.jts.io.WKTReader;
  * @author Ahmed Eldawy
  *
  */
-public class ST_Area extends EvalFunc<Double> {
+public class Area extends EvalFunc<Double> {
   
   private final WKTReader wkt_reader = new WKTReader();
 

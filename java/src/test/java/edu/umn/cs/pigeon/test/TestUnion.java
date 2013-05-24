@@ -29,20 +29,20 @@ import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
 import edu.umn.cs.pigeon.GeometryParser;
-import edu.umn.cs.pigeon.ST_Union;
+import edu.umn.cs.pigeon.Union;
 
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestST_Union extends TestCase {
+public class TestUnion extends TestCase {
   
   private ArrayList<Geometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestST_Union() {
+  public TestUnion() {
     geometries = new ArrayList<Geometry>();
     GeometryFactory geometryFactory = new GeometryFactory();
 
@@ -72,7 +72,7 @@ public class TestST_Union extends TestCase {
     PigServer pig = new PigServer(LOCAL);
     String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
       "B = GROUP A ALL;\n" +
-      "C = FOREACH B GENERATE "+ST_Union.class.getName()+"(A.geom);";
+      "C = FOREACH B GENERATE "+Union.class.getName()+"(A.geom);";
     pig.registerQuery(query);
     Iterator<?> it = pig.openIterator("C");
     

@@ -28,19 +28,19 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 
-import edu.umn.cs.pigeon.ST_Area;
+import edu.umn.cs.pigeon.AsText;
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestST_Area extends TestCase {
+public class TestAsText extends TestCase {
   
   private ArrayList<Geometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestST_Area() {
+  public TestAsText() {
     GeometryFactory geometryFactory = new GeometryFactory();
     Coordinate[] coordinates = new Coordinate[5];
     coordinates[0] = new Coordinate(0, 0);
@@ -63,7 +63,7 @@ public class TestST_Area extends TestCase {
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
     String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
-      "B = FOREACH A GENERATE "+ST_Area.class.getName()+"(geom);";
+      "B = FOREACH A GENERATE "+AsText.class.getName()+"(geom);";
     pig.registerQuery(query);
     Iterator<?> it = pig.openIterator("B");
     Iterator<Geometry> geoms = geometries.iterator();
@@ -72,8 +72,8 @@ public class TestST_Area extends TestCase {
       Geometry geom = geoms.next();
       if (tuple == null)
         break;
-      Double area = (Double) tuple.get(0);
-      assertEquals(geom.getArea(), area);
+      String wkt = (String) tuple.get(0);
+      assertEquals(geom.toText(), wkt);
     }
   }
 

@@ -36,7 +36,7 @@ import com.vividsolutions.jts.io.WKBWriter;
  * @author Ahmed Eldawy
  *
  */
-public class ST_Union extends EvalFunc<DataByteArray> implements Algebraic,
+public class Union extends EvalFunc<DataByteArray> implements Algebraic,
     Accumulator<DataByteArray> {
   
   private static final GeometryParser geometryParser = new GeometryParser();

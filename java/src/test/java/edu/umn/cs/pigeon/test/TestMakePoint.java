@@ -10,7 +10,6 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
-
 package edu.umn.cs.pigeon.test;
 
 import static org.apache.pig.ExecType.LOCAL;
@@ -26,65 +25,62 @@ import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.WKBWriter;
 
-import edu.umn.cs.pigeon.ST_MakeLine;
-
+import edu.umn.cs.pigeon.MakePoint;
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestST_MakeLine extends TestCase {
+public class TestMakePoint extends TestCase {
   
-  private ArrayList<Geometry> geometries;
+  private ArrayList<Point> points;
   private ArrayList<String[]> data;
   private WKBWriter wkbWriter = new WKBWriter();
   
-  
-  public TestST_MakeLine() {
-    GeometryFactory geometryFactory = new GeometryFactory();
-    geometries = new ArrayList<Geometry>();
-    geometries.add(geometryFactory.createLineString(new Coordinate[] {
-        new Coordinate(0, 0), new Coordinate(0, 3), new Coordinate(4, 5),
-        new Coordinate(10, 0) }));
-    geometries.add(geometryFactory.createLineString(new Coordinate[] {
-        new Coordinate(5, 6), new Coordinate(10, 3), new Coordinate(7, 13)}));
-    
+  public TestMakePoint() {
+    GeometryFactory geometry_factory = new GeometryFactory();
+    points = new ArrayList<Point>();
+    points.add(geometry_factory.createPoint(new Coordinate(1, 1)));
+    points.add(geometry_factory.createPoint(new Coordinate(-1, -3.55)));
+    points.add(geometry_factory.createPoint(new Coordinate(0, 0)));
+
     data = new ArrayList<String[]>();
-    for (int i_geom = 0; i_geom < geometries.size(); i_geom++) {
-      Coordinate[] coordinates = geometries.get(i_geom).getCoordinates();
-      for (int i_point = 0; i_point < coordinates.length; i_point++) {
-        Point point = geometryFactory.createPoint(coordinates[i_point]);
-        data.add(new String[] {Integer.toString(i_geom), Integer.toString(i_point), point.toText()});
-      }
+    for (int i = 0; i < points.size(); i++) {
+      Point point = points.get(i);
+      data.add(new String[] { Integer.toString(i),
+          Double.toString(point.getX()), Double.toString(point.getY()) });
     }
   }
   
-  public void testShouldWorkWithWKT() throws Exception {
+  protected void innerTest(String schema) throws Exception {
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
-    String query = "A = LOAD 'file:" + datafile + "' as (geom_id, point_pos, point);\n" +
-      "B = ORDER A BY point_pos;" +
-      "C = GROUP B BY geom_id;" +
-      "D = FOREACH C GENERATE group, "+ST_MakeLine.class.getName()+"(B.point);";
+    String query = "A = LOAD 'file:" + datafile + "' as "+schema+";\n" +
+      "B = FOREACH A GENERATE "+MakePoint.class.getName()+"(x, y);";
     pig.registerQuery(query);
-    Iterator<?> it = pig.openIterator("D");
-    Iterator<Geometry> geoms = geometries.iterator();
-    int count = 0;
-    while (it.hasNext() && geoms.hasNext()) {
+    Iterator<?> it = pig.openIterator("B");
+    Iterator<Point> i_point = points.iterator();
+    while (it.hasNext() && i_point.hasNext()) {
       Tuple tuple = (Tuple) it.next();
-      Geometry geom = geoms.next();
+      Point point = i_point.next();
       if (tuple == null)
         break;
-      assertTrue(Arrays.equals(wkbWriter.write(geom), ((DataByteArray)tuple.get(1)).get()));
-      count++;
+      DataByteArray created_point = (DataByteArray) tuple.get(0);
+      assertTrue(Arrays.equals(created_point.get(), wkbWriter.write(point)));
     }
-    assertEquals(geometries.size(), count);
+  }
+
+  public void testShouldMakeAPointFromDoubles() throws Exception {
+    innerTest("(id:int, x:double, y:double)");
+  }
+
+  public void testShouldMakeAPointFromDataByteArray() throws Exception {
+    innerTest("(id, x, y)");
   }
 
 }

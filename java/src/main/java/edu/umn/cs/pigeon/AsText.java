@@ -26,7 +26,7 @@ import com.vividsolutions.jts.io.ParseException;
  * @author Ahmed Eldawy
  *
  */
-public class ST_AsText extends EvalFunc<String> {
+public class AsText extends EvalFunc<String> {
 
   private GeometryParser geometryParser = new GeometryParser();
   

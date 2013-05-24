@@ -10,40 +10,35 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
-
 package edu.umn.cs.pigeon;
 
 import java.io.IOException;
 
 import org.apache.pig.EvalFunc;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.WKBWriter;
 
 /**
- * Returns the Well-Known Binary (WKB) representation of a geometry object
- * represented as hex string.
  * @author Ahmed Eldawy
  *
  */
-public class ST_AsHex extends EvalFunc<String> {
-
-  private GeometryParser geometryParser = new GeometryParser();
+public class MakePoint extends EvalFunc<DataByteArray> {
+  
+  private GeometryFactory geometryFactory = new GeometryFactory();
   private WKBWriter wkbWriter = new WKBWriter();
   
   @Override
-  public String exec(Tuple t) throws IOException {
-    try {
-      if (t.size() != 1)
-        throw new IOException("ST_AsText expects one geometry argument");
-      Geometry geom = geometryParser.parseGeom(t.get(0));
-      byte[] wkb = wkbWriter.write(geom);
-      return WKBWriter.bytesToHex(wkb);
-    } catch (ParseException e) {
-      throw new IOException("Error parsing object "+t, e);
-    }
+  public DataByteArray exec(Tuple input) throws IOException {
+    if (input.size() != 2)
+      throw new IOException("ST_MakePoint takes two numerical arguments");
+    double x = GeometryParser.parseDouble(input.get(0));
+    double y = GeometryParser.parseDouble(input.get(1));
+    Point point = geometryFactory.createPoint(new Coordinate(x, y));
+    return new DataByteArray(wkbWriter.write(point));
   }
-
 }
