@@ -32,6 +32,34 @@ that `bytearray` instead. This is a little bit cumbersome, but the Pig team is
 able to add custom data types so that we have a cleaner extension.
 
 
+How to compile
+==============
+SPig requires the LGPL library Java Topology Suite (JTS) to compile. You need to
+download a recent version of JTS and add it to the classpath of your Java compiler
+to be able to compile the code. Of course you also need Pig classes to be available
+in the classpath. The current code is tested against JTS 1.8 and Pig 0.11.1.
+Currently you have to do the compilation manually but we are planning to create
+an ANT build file to automate the compilation. Once you compile the code, you
+can create a jar file out of it and REGISTER it in your Pig scripts.
+
+
+How to use
+==========
+To use SPig in your Pig scripts, you need to REGISTER the jar file in your Pig
+script. Then you can use the spatial functionality in your script as you cdo with
+normal functionality. Here are some simple examples on how to use SPig.
+
+Let's say you have a trajectory in the form (latitude, longitude, timestamp). We need to
+for a Linestring out of this trajectory when points in this linestring are sorted
+by timestamp.
+
+    points = LOAD 'points' AS (lat:int, lon:int, timetamp: datetime);
+    s_points = FOREACH points GENERATE ST_MakePoint(lat, lon) AS point, timestamp;
+    points_by_time = ORDER s_points BY timestamp;
+    points_grouped = GROUP points_by_time ALL;
+    lines = FOREACH points_grouped GENERATE ST_AsText(ST_MakeLine(points_by_time));
+
+
 Contribution
 ============
 SPig is open source and licensed under the Apache open source license. Your
