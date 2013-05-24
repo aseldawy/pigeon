@@ -13,6 +13,7 @@ Our target is to have something like [PostGIS](http://postgis.net/) but for Pig
 instead of PostgreSQL. We use the same function names to make it easier for
 existing users to use Pigeon. Here is an example the computes the union of all
 ZIP codes in each city. 
+
     zip_codes = LOAD 'zips' AS (zip, city, geom);
     zip_by_city = GROUP zip_codes BY city;
     zip_union = FOREACH zip_by_city
@@ -40,12 +41,12 @@ to be able to compile the code. Of course you also need Pig classes to be availa
 in the classpath. The current code is tested against JTS 1.8 and Pig 0.11.1.
 Currently you have to do the compilation manually but we are planning to create
 an ANT build file to automate the compilation. Once you compile the code, you
-can create a jar file out of it and REGISTER it in your Pig scripts.
+can create a jar file out of it and [REGISTER](http://pig.apache.org/docs/r0.11.1/basic.html#register) it in your Pig scripts.
 
 
 How to use
 ==========
-To use Pigeon in your Pig scripts, you need to REGISTER the jar file in your Pig
+To use Pigeon in your Pig scripts, you need to [REGISTER](http://pig.apache.org/docs/r0.11.1/basic.html#register) the jar file in your Pig
 script. Then you can use the spatial functionality in your script as you cdo with
 normal functionality. Here are some simple examples on how to use Pigeon.
 
@@ -53,11 +54,13 @@ Let's say you have a trajectory in the form (latitude, longitude, timestamp). We
 for a Linestring out of this trajectory when points in this linestring are sorted
 by timestamp.
 
-    points = LOAD 'points' AS (lat:int, lon:int, timetamp: datetime);
-    s_points = FOREACH points GENERATE ST_MakePoint(lat, lon) AS point, timestamp;
-    points_by_time = ORDER s_points BY timestamp;
+
+    points = LOAD 'trajectory.tsv' AS (time: datetime, lat:double, lon:double);
+    s_points = FOREACH points GENERATE ST_MakePoint(lat, lon) AS point, time;
+    points_by_time = ORDER s_points BY time;
     points_grouped = GROUP points_by_time ALL;
     lines = FOREACH points_grouped GENERATE ST_AsText(ST_MakeLine(points_by_time));
+    STORE lines INTO 'line';
 
 
 Contribution
@@ -80,3 +83,6 @@ testing Pigeon which is a wrapper around JTS. For example, you don't have to tes
 all the special cases of polygons if implementing an intersection function.
 All what we want is to make sure that you call the right function in JTS and
 return the output in the correct format. 
+
+Mainly, we need to support as many as possible of the
+[functions](http://postgis.net/docs/manual-1.4/ch08.html) provided by PostGIS.
