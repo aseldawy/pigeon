@@ -18,8 +18,7 @@ import java.io.IOException;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 /**
  * Returns the Well-Known Text (WKT) representation of a geometry object.
@@ -32,14 +31,10 @@ public class AsText extends EvalFunc<String> {
   
   @Override
   public String exec(Tuple t) throws IOException {
-    try {
-      if (t.size() != 1)
-        throw new IOException("ST_AsText expects one geometry argument");
-      Geometry geom = geometryParser.parseGeom(t.get(0));
-      return geom.toText();
-    } catch (ParseException e) {
-      throw new IOException("Error parsing object "+t, e);
-    }
+    if (t.size() != 1)
+      throw new IOException("ST_AsText expects one geometry argument");
+    OGCGeometry geom = geometryParser.parseGeom(t.get(0));
+    return geom.asText();
   }
 
 }

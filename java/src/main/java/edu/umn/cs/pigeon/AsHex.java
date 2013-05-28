@@ -18,9 +18,7 @@ import java.io.IOException;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 /**
  * Returns the Well-Known Binary (WKB) representation of a geometry object
@@ -31,19 +29,13 @@ import com.vividsolutions.jts.io.WKBWriter;
 public class AsHex extends EvalFunc<String> {
 
   private GeometryParser geometryParser = new GeometryParser();
-  private WKBWriter wkbWriter = new WKBWriter();
   
   @Override
   public String exec(Tuple t) throws IOException {
-    try {
-      if (t.size() != 1)
-        throw new IOException("ST_AsText expects one geometry argument");
-      Geometry geom = geometryParser.parseGeom(t.get(0));
-      byte[] wkb = wkbWriter.write(geom);
-      return WKBWriter.bytesToHex(wkb);
-    } catch (ParseException e) {
-      throw new IOException("Error parsing object "+t, e);
-    }
+    if (t.size() != 1)
+      throw new IOException("ST_AsText expects one geometry argument");
+    OGCGeometry geom = geometryParser.parseGeom(t.get(0));
+    return GeometryParser.bytesToHex(geom.asBinary().array());
   }
 
 }

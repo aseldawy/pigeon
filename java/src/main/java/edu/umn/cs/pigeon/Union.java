@@ -13,6 +13,7 @@
 package edu.umn.cs.pigeon;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.pig.Accumulator;
 import org.apache.pig.Algebraic;
@@ -23,11 +24,9 @@ import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
 /**
  * Finds the union of a set of shapes. This is an algebraic function which works
@@ -40,15 +39,10 @@ public class Union extends EvalFunc<DataByteArray> implements Algebraic,
     Accumulator<DataByteArray> {
   
   private static final GeometryParser geometryParser = new GeometryParser();
-  private static final WKBWriter wkbWriter = new WKBWriter();
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
-    try {
-      return new DataByteArray(wkbWriter.write(union(input)));
-    } catch (ParseException e) {
-      throw new IOException("Error computing union", e);
-    }
+    return new DataByteArray(union(input).asBinary().array());
   }
 
   @Override
@@ -71,68 +65,58 @@ public class Union extends EvalFunc<DataByteArray> implements Algebraic,
   static public class Intermed extends EvalFunc<Tuple> {
     @Override
     public Tuple exec(Tuple input) throws IOException {
-      try {
-        return TupleFactory.getInstance().newTuple(union(input).toString());
-      } catch (ParseException e) {
-        throw new IOException("Error computing union", e);
-      }
+      return TupleFactory.getInstance().newTuple(
+          new DataByteArray(union(input).asBinary().array()));
     }
   }
   
   static public class Final extends EvalFunc<DataByteArray> {
     @Override
     public DataByteArray exec(Tuple input) throws IOException {
-      try {
-        return new DataByteArray(wkbWriter.write(union(input)));
-      } catch (ParseException e) {
-        throw new IOException("Error computing union", e);
-      }
+      return new DataByteArray(union(input).asBinary().array());
     }
   }
 
-  static protected Geometry union(Tuple input) throws ExecException, ParseException {
+  static protected OGCGeometry union(Tuple input) throws ExecException {
     DataBag values = (DataBag)input.get(0);
     if (values.size() == 0)
       return null;
-    Geometry[] all_geoms = new Geometry[(int) values.size()];
-    int i = 0;
+    ArrayList<OGCGeometry> all_geoms =
+        new ArrayList<OGCGeometry>();
     for (Tuple one_geom : values) {
-      all_geoms[i++] = geometryParser.parseGeom(one_geom.get(0));
+      OGCGeometry parsedGeom = geometryParser.parseGeom(one_geom.get(0));
+      all_geoms.add(parsedGeom);
     }
     
     // Do a union of all_geometries in the recommended way (using buffer(0))
-    GeometryCollection geom_collection =
-        new GeometryFactory().createGeometryCollection(all_geoms);
-    return geom_collection.buffer(0);
+    OGCGeometryCollection geom_collection = new OGCConcreteGeometryCollection(
+        all_geoms, all_geoms.get(0).getEsriSpatialReference());
+    return geom_collection.union(all_geoms.get(0));
   }
 
-  Geometry partialUnion;
+  OGCGeometry partialUnion;
   GeometryParser geomParser = new GeometryParser();
-  GeometryFactory geometryFactory = new GeometryFactory();
   
   @Override
   public void accumulate(Tuple b) throws IOException {
-    try {
-      // Union all passed elements along with the union we might currently have
-      DataBag bag = (DataBag) b.get(0);
-      Geometry[] all_geoms = new Geometry[(int) bag.size()
-          + (partialUnion == null ? 0 : 1)];
-      int i = 0;
-      if (partialUnion != null)
-        all_geoms[i++] = partialUnion;
-      for (Tuple t : bag) {
-        Geometry geom = geomParser.parseGeom(t.get(0));
-        all_geoms[i++] = geom;
-      }
-      partialUnion = geometryFactory.createGeometryCollection(all_geoms).buffer(0);
-    } catch (ParseException e) {
-      throw new IOException("Error parsing object: "+b, e);
+    // Union all passed elements along with the union we might currently have
+    DataBag bag = (DataBag) b.get(0);
+    ArrayList<OGCGeometry> all_geoms = new ArrayList<OGCGeometry>(
+        (int) bag.size() + (partialUnion == null ? 0 : 1));
+    int i = 0;
+    if (partialUnion != null)
+      all_geoms.set(i++, partialUnion);
+    for (Tuple t : bag) {
+      OGCGeometry geom = geomParser.parseGeom(t.get(0));
+      all_geoms.set(i++, geom);
     }
+    partialUnion = new OGCConcreteGeometryCollection(all_geoms, all_geoms
+        .get(0).getEsriSpatialReference()).union(all_geoms.get(0));
   }
 
   @Override
   public DataByteArray getValue() {
-    return new DataByteArray(wkbWriter.write(partialUnion));
+    return new DataByteArray(partialUnion.asBinary().array());
   }
 
   @Override

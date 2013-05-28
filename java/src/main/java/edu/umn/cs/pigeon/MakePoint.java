@@ -18,10 +18,9 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.ogc.OGCPoint;
 
 /**
  * @author Ahmed Eldawy
@@ -29,16 +28,14 @@ import com.vividsolutions.jts.io.WKBWriter;
  */
 public class MakePoint extends EvalFunc<DataByteArray> {
   
-  private GeometryFactory geometryFactory = new GeometryFactory();
-  private WKBWriter wkbWriter = new WKBWriter();
-  
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
     if (input.size() != 2)
-      throw new IOException("ST_MakePoint takes two numerical arguments");
+      throw new IOException("MakePoint takes two numerical arguments");
     double x = GeometryParser.parseDouble(input.get(0));
     double y = GeometryParser.parseDouble(input.get(1));
-    Point point = geometryFactory.createPoint(new Coordinate(x, y));
-    return new DataByteArray(wkbWriter.write(point));
+    Point point = new Point(x, y);
+    OGCPoint ogc_point = new OGCPoint(point, SpatialReference.create(4326));
+    return new DataByteArray(ogc_point.asBinary().array());
   }
 }

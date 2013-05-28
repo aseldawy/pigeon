@@ -24,10 +24,9 @@ import org.apache.pig.PigServer;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.ogc.OGCPoint;
 
 import edu.umn.cs.pigeon.MakePoint;
 
@@ -39,14 +38,12 @@ public class TestMakePoint extends TestCase {
   
   private ArrayList<Point> points;
   private ArrayList<String[]> data;
-  private WKBWriter wkbWriter = new WKBWriter();
   
   public TestMakePoint() {
-    GeometryFactory geometry_factory = new GeometryFactory();
     points = new ArrayList<Point>();
-    points.add(geometry_factory.createPoint(new Coordinate(1, 1)));
-    points.add(geometry_factory.createPoint(new Coordinate(-1, -3.55)));
-    points.add(geometry_factory.createPoint(new Coordinate(0, 0)));
+    points.add(new Point(1, 1));
+    points.add(new Point(-1, -3.55));
+    points.add(new Point(0, 0));
 
     data = new ArrayList<String[]>();
     for (int i = 0; i < points.size(); i++) {
@@ -71,7 +68,8 @@ public class TestMakePoint extends TestCase {
       if (tuple == null)
         break;
       DataByteArray created_point = (DataByteArray) tuple.get(0);
-      assertTrue(Arrays.equals(created_point.get(), wkbWriter.write(point)));
+      assertTrue(Arrays.equals(created_point.get(),
+          new OGCPoint(point, SpatialReference.create(4326)).asBinary().array()));
     }
   }
 

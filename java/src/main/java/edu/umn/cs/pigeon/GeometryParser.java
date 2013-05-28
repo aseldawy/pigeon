@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 import org.apache.pig.data.DataByteArray;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
-import com.vividsolutions.jts.io.ParseException;
 
 /**
  * Retrieves a geometry from a pig attribute. It detects the type of the column
@@ -37,7 +36,7 @@ import com.vividsolutions.jts.io.ParseException;
  */
 public class GeometryParser {
   
-  public OGCGeometry parseGeom(Object o) throws ParseException {
+  public OGCGeometry parseGeom(Object o) {
     OGCGeometry geom = null;
     if (o instanceof DataByteArray) {
       try {

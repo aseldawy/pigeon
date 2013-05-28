@@ -16,15 +16,12 @@ package edu.umn.cs.pigeon;
 import java.io.IOException;
 
 import org.apache.pig.EvalFunc;
-import org.apache.pig.PigException;
 import org.apache.pig.backend.executionengine.ExecException;
-import org.apache.pig.data.DataByteArray;
-import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
+import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.ogc.OGCGeometry;
+
 
 /**
  * A UDF that returns the area of a geometry as calculated by
@@ -34,29 +31,14 @@ import com.vividsolutions.jts.io.WKTReader;
  */
 public class Area extends EvalFunc<Double> {
   
-  private final WKTReader wkt_reader = new WKTReader();
+  private final GeometryParser geometryParser = new GeometryParser();
 
   @Override
   public Double exec(Tuple input) throws IOException {
     try {
       Object v = input.get(0);
-      String wkt = null;
-      if (v instanceof DataByteArray) {
-        wkt = new String(((DataByteArray) v).get());
-      } else if (v instanceof String) {
-        wkt = (String) v;
-      } else {
-        int errCode = 2102;
-        String msg = "Cannot parse a "+
-        DataType.findTypeName(v) + " into a geometry";
-        throw new ExecException(msg, errCode, PigException.BUG);
-      }
-      try {
-        Geometry g = wkt_reader.read(wkt);
-        return g.getArea();
-      } catch (ParseException e) {
-        throw new ExecException("Error parsing object from '" + wkt + "'");
-      }
+      OGCGeometry geom = geometryParser.parseGeom(v);
+      return geom.getEsriGeometry().calculateArea2D();
     } catch (ExecException ee) {
       throw ee;
     }

@@ -23,10 +23,9 @@ import junit.framework.TestCase;
 import org.apache.pig.PigServer;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
 import edu.umn.cs.pigeon.GeometryParser;
 import edu.umn.cs.pigeon.Union;
@@ -38,31 +37,21 @@ import edu.umn.cs.pigeon.Union;
  */
 public class TestUnion extends TestCase {
   
-  private ArrayList<Geometry> geometries;
+  private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
   
   
   public TestUnion() {
-    geometries = new ArrayList<Geometry>();
-    GeometryFactory geometryFactory = new GeometryFactory();
+    geometries = new ArrayList<OGCGeometry>();
 
     // Create polygons
-    geometries.add(geometryFactory.createPolygon(
-        geometryFactory.createLinearRing(new Coordinate[] {
-            new Coordinate(0, 0), new Coordinate(6, 0), new Coordinate(0, 5),
-            new Coordinate(0, 0) }), null));
-    geometries.add(geometryFactory.createPolygon(
-        geometryFactory.createLinearRing(new Coordinate[] {
-            new Coordinate(2, 2), new Coordinate(7, 2), new Coordinate(2, 6),
-            new Coordinate(2, 2) }), null));
-    geometries.add(geometryFactory.createPolygon(
-        geometryFactory.createLinearRing(new Coordinate[] {
-            new Coordinate(3, -2), new Coordinate(8, -1), new Coordinate(8, 4),
-            new Coordinate(3, -2) }), null));
+    geometries.add(OGCGeometry.fromText("Polygon((0 0, 6 0, 0 5, 0 0))"));
+    geometries.add(OGCGeometry.fromText("Polygon((2 2, 7 2, 2 6, 2 2))"));
+    geometries.add(OGCGeometry.fromText("Polygon((3 -2, 8 -1, 8 4, 3 -2))"));
 
     data = new ArrayList<String[]>();
     for (int i = 0; i < geometries.size(); i++) {
-      data.add(new String[] {Integer.toString(i), geometries.get(i).toText()});
+      data.add(new String[] {Integer.toString(i), geometries.get(i).asText()});
     }
   }
   
@@ -77,10 +66,9 @@ public class TestUnion extends TestCase {
     Iterator<?> it = pig.openIterator("C");
     
     // Calculate the union outside Pig
-    GeometryFactory geometryFactory = new GeometryFactory();
-    GeometryCollection all_geoms = geometryFactory.createGeometryCollection(
-        geometries.toArray(new Geometry[geometries.size()]));
-    Geometry true_union = all_geoms.buffer(0);
+    OGCGeometryCollection geometry_collection = new OGCConcreteGeometryCollection(
+        geometries, geometries.get(0).getEsriSpatialReference());
+    OGCGeometry true_union = geometry_collection.union(geometries.get(1));
     
     int output_size = 0;
     
@@ -89,7 +77,7 @@ public class TestUnion extends TestCase {
       if (tuple == null)
         break;
       output_size++;
-      Geometry calculated_union = new GeometryParser().parseGeom(tuple.get(0));
+      OGCGeometry calculated_union = new GeometryParser().parseGeom(tuple.get(0));
       assertTrue(true_union.equals(calculated_union));
     }
     assertEquals(1, output_size);

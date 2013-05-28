@@ -23,10 +23,8 @@ import junit.framework.TestCase;
 import org.apache.pig.PigServer;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
+import com.esri.core.geometry.Polygon;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 import edu.umn.cs.pigeon.Area;
 
@@ -36,25 +34,18 @@ import edu.umn.cs.pigeon.Area;
  */
 public class TestArea extends TestCase {
   
-  private ArrayList<Geometry> geometries;
+  private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
   
   
   public TestArea() {
-    GeometryFactory geometryFactory = new GeometryFactory();
-    Coordinate[] coordinates = new Coordinate[5];
-    coordinates[0] = new Coordinate(0, 0);
-    coordinates[1] = new Coordinate(0, 3);
-    coordinates[2] = new Coordinate(4, 5);
-    coordinates[3] = new Coordinate(10, 0);
-    coordinates[4] = new Coordinate(0, 0);
-    LinearRing line = geometryFactory.createLinearRing(coordinates);
-    geometries = new ArrayList<Geometry>();
-    geometries.add(geometryFactory.createPolygon(line, null));
+    geometries = new ArrayList<OGCGeometry>();
+    geometries.add(OGCGeometry.fromText("Polygon ((0 0, 0 3, 4 5, 10 0, 0 0))"))
+    ;
     
     data = new ArrayList<String[]>();
     for (int i = 0; i < geometries.size(); i++) {
-      data.add(new String[] {Integer.toString(i), geometries.get(i).toText()});
+      data.add(new String[] {Integer.toString(i), geometries.get(i).asText()});
     }
   }
   
@@ -66,14 +57,14 @@ public class TestArea extends TestCase {
       "B = FOREACH A GENERATE "+Area.class.getName()+"(geom);";
     pig.registerQuery(query);
     Iterator<?> it = pig.openIterator("B");
-    Iterator<Geometry> geoms = geometries.iterator();
+    Iterator<OGCGeometry> geoms = geometries.iterator();
     while (it.hasNext() && geoms.hasNext()) {
       Tuple tuple = (Tuple) it.next();
-      Geometry geom = geoms.next();
+      OGCGeometry geom = geoms.next();
       if (tuple == null)
         break;
       Double area = (Double) tuple.get(0);
-      assertEquals(geom.getArea(), area);
+      assertEquals(((Polygon)geom.getEsriGeometry()).calculateArea2D(), area);
     }
   }
 

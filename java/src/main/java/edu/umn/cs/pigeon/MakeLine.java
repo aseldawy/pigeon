@@ -20,11 +20,13 @@ import org.apache.pig.data.DataBag;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.esri.core.geometry.Line;
+import com.esri.core.geometry.MultiPath;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.Polyline;
+import com.esri.core.geometry.Segment;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.ogc.OGCLineString;
 
 /**
  * Generates a geometry of type LineString out of a bag of points.
@@ -32,25 +34,27 @@ import com.vividsolutions.jts.io.WKBWriter;
  */
 public class MakeLine extends EvalFunc<DataByteArray>{
   
-  private GeometryFactory geometryFactory = new GeometryFactory();
   private GeometryParser geometryParser = new GeometryParser();
-  private WKBWriter wkbWriter = new WKBWriter();
 
   @Override
   public DataByteArray exec(Tuple b) throws IOException {
     DataBag points = (DataBag) b.get(0);
-    Coordinate[] coordinates = new Coordinate[(int) points.size()];
+    Point[] coordinates = new Point[(int) points.size()];
     int i = 0;
     for (Tuple t : points) {
-      try {
-        Geometry point = geometryParser.parseGeom(t.get(0));
-        coordinates[i++] = point.getCoordinate();
-      } catch (ParseException e) {
-        throw new IOException("Error parsing "+t.get(0), e);
-      }
+      coordinates[i++] =
+          (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
     }
-    Geometry line = geometryFactory.createLineString(coordinates);
-    return new DataByteArray(wkbWriter.write(line));
+    MultiPath multi_path = new Polyline();
+    for (i = 1; i <coordinates.length; i++) {
+      Segment segment = new Line();
+      segment.setStart(coordinates[i-1]);
+      segment.setEnd(coordinates[i]);
+      multi_path.addSegment(segment, false);
+    }
+    OGCLineString linestring = new OGCLineString(multi_path, 0,
+        SpatialReference.create(4326));
+    return new DataByteArray(linestring.asBinary().array());
   }
 
 }
