@@ -13,69 +13,91 @@
 
 package edu.umn.cs.pigeon.test;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 import org.apache.pig.data.DataByteArray;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.io.WKBWriter;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 import edu.umn.cs.pigeon.GeometryParser;
 
 public class TestGeometryParser extends TestCase {
   
   private GeometryParser geometry_parser = new GeometryParser();
-  private Geometry polygon;
+  private OGCGeometry polygon;
   
   public TestGeometryParser() {
-    GeometryFactory geometryFactory = new GeometryFactory();
-    Coordinate[] coordinates = new Coordinate[5];
-    coordinates[0] = new Coordinate(0, 0);
-    coordinates[1] = new Coordinate(0, 3);
-    coordinates[2] = new Coordinate(4, 5);
-    coordinates[3] = new Coordinate(10, 0);
-    coordinates[4] = new Coordinate(0, 0);
-    LinearRing line = geometryFactory.createLinearRing(coordinates);
-    polygon = geometryFactory.createPolygon(line, null);
+    polygon = OGCGeometry.fromText("Polygon ((0 0, 0 3, 4 5, 10 0, 0 0))");
+  }
+  
+  public void testShouldConvertBinaryToHex() throws Exception {
+    byte[][] binaryTable = new byte[][] {
+        {(byte)0xaa, (byte)0xbb, (byte)0xcd, 0x0f},
+        {}
+    };
+    String[] hexTable = {
+      "AABBCD0F",
+      ""
+    };
+    for (int i = 0; i < binaryTable.length; i ++) {
+      byte[] binary = binaryTable[i];
+      String hex = hexTable[i];
+      assertTrue(hex.equals(GeometryParser.bytesToHex(binary)));
+    }
+  }
+  
+  public void testShouldConvertHexToBinary() throws Exception {
+    byte[][] binaryTable = new byte[][] {
+        {(byte)0xaa, (byte)0xbb, (byte)0xcd, 0x0f},
+        {}
+    };
+    String[] hexTable = {
+      "AABBCD0F",
+      ""
+    };
+    for (int i = 0; i < binaryTable.length; i ++) {
+      byte[] binary = binaryTable[i];
+      String hex = hexTable[i];
+      assertTrue(Arrays.equals(binary, GeometryParser.hexToBytes(hex)));
+    }
   }
 
   public void testShouldParseWKT() throws Exception {
-    String wkt = polygon.toString();
-    Geometry parsed = geometry_parser.parseGeom(wkt);
+    String wkt = polygon.asText();
+    OGCGeometry parsed = geometry_parser.parseGeom(wkt);
     assertTrue(polygon.equals(parsed));
   }
 
   public void testShouldParseHexString() throws Exception {
-    byte[] binary = new WKBWriter().write(polygon);
-    String hex = WKBWriter.bytesToHex(binary);
-    Geometry parsed = geometry_parser.parseGeom(hex);
+    byte[] binary = polygon.asBinary().array();
+    String hex = GeometryParser.bytesToHex(binary);
+    OGCGeometry parsed = geometry_parser.parseGeom(hex);
     assertTrue(polygon.equals(parsed));
   }
   
   public void testShouldParseWKB() throws Exception {
-    byte[] binary = new WKBWriter().write(polygon);
+    byte[] binary = polygon.asBinary().array();
     DataByteArray barray = new DataByteArray(binary);
-    Geometry parsed = geometry_parser.parseGeom(barray);
+    OGCGeometry parsed = geometry_parser.parseGeom(barray);
     assertTrue(polygon.equals(parsed));
   }
   
   public void testShouldParseWKTEncodedInBinary() throws Exception {
-    String wkt = polygon.toString();
+    String wkt = polygon.asText();
     DataByteArray barray = new DataByteArray(wkt);
-    Geometry parsed = geometry_parser.parseGeom(barray);
+    OGCGeometry parsed = geometry_parser.parseGeom(barray);
     assertTrue(polygon.equals(parsed));
   }
 
   public void testShouldReturnNullOnGarbageText() throws Exception {
-    Geometry parsed = geometry_parser.parseGeom("asdfasdf");
+    OGCGeometry parsed = geometry_parser.parseGeom("asdfasdf");
     assertNull(parsed);
   }
 
   public void testShouldReturnNullOnGarbageBinary() throws Exception {
-    Geometry parsed = geometry_parser.parseGeom(new DataByteArray(new byte[] {0, 1, 2, 3}));
+    OGCGeometry parsed = geometry_parser.parseGeom(new DataByteArray(new byte[] {0, 1, 2, 3}));
     assertNull(parsed);
   }
 }

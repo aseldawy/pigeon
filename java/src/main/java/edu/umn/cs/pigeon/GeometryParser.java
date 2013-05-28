@@ -13,12 +13,12 @@
 
 package edu.umn.cs.pigeon;
 
+import java.nio.ByteBuffer;
+
 import org.apache.pig.data.DataByteArray;
 
-import com.vividsolutions.jts.geom.Geometry;
+import com.esri.core.geometry.ogc.OGCGeometry;
 import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBReader;
-import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * Retrieves a geometry from a pig attribute. It detects the type of the column
@@ -37,38 +37,29 @@ import com.vividsolutions.jts.io.WKTReader;
  */
 public class GeometryParser {
   
-  private final WKTReader wkt_reader = new WKTReader();
-  private final WKBReader wkb_reader = new WKBReader();
-  
-  public Geometry parseGeom(Object o) throws ParseException {
-    Geometry geom = null;
+  public OGCGeometry parseGeom(Object o) throws ParseException {
+    OGCGeometry geom = null;
     if (o instanceof DataByteArray) {
-      byte[] bytes = ((DataByteArray) o).get();
       try {
         // Parse data as well known binary (WKB)
-        geom = wkb_reader.read(bytes);
-      } catch (ParseException e) {
-        // Convert bytes to text and try text parser
-        o = new String(bytes);
+        byte[] bytes = ((DataByteArray) o).get();
+        geom = OGCGeometry.fromBinary(ByteBuffer.wrap(bytes));
+      } catch (RuntimeException e) {
+        // Treat it as an encoded string (WKT)
+        o = new String(((DataByteArray) o).get());
       }
     }
     if (o instanceof String) {
       try {
         // Parse string as well known text (WKT)
-        geom = wkt_reader.read((String) o);
-      } catch (ParseException e) {
-        // Parse string as a hex string of a well known binary (WKB)
-        String hex = (String) o;
-        boolean isHex = true;
-        for (int i = 0; isHex && i < hex.length(); i++) {
-          char digit = hex.charAt(i);
-          isHex = (digit >= '0' && digit <= '9') ||
-            (digit >= 'a' && digit <= 'f') ||
-            (digit >= 'A' && digit <= 'F');
-        }
-        if (isHex) {
-          byte[] binary = WKBReader.hexToBytes(hex);
-          geom = wkb_reader.read(binary);
+        geom = OGCGeometry.fromText((String) o);
+      } catch (IllegalArgumentException e) {
+        try {
+          // Error parsing from WKT, try hex string instead
+          byte[] binary = hexToBytes((String) o);
+          geom = OGCGeometry.fromBinary(ByteBuffer.wrap(binary));
+        } catch (RuntimeException e1) {
+          // Cannot parse text. Just return null
         }
       }
     }
@@ -83,5 +74,50 @@ public class GeometryParser {
     if (o instanceof DataByteArray)
       return Double.parseDouble(new String(((DataByteArray) o).get()));
     throw new RuntimeException("Cannot parse "+o+" into double");
+  }
+
+  private static final byte[] HexLookupTable = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+    'F'
+  };
+  
+  /**
+   * Convert binary array to a hex string.
+   * @param binary
+   * @return
+   */
+  public static String bytesToHex(byte[] binary) {
+    // Each byte is converted to two hex values
+    byte[] hex = new byte[binary.length * 2];
+    for (int i = 0; i < binary.length; i++) {
+      hex[2*i] = HexLookupTable[(binary[i] & 0xFF) >>> 4];
+      hex[2*i+1] = HexLookupTable[binary[i] & 0xF];
+    }
+    return new String(hex);
+  }
+  
+  /**
+   * Convert a string containing a hex string to a byte array of binary.
+   * For example, the string "AABB" is converted to the byte array {0xAA, 0XBB}
+   * @param hex
+   * @return
+   */
+  public static byte[] hexToBytes(String hex) {
+    byte[] bytes = new byte[(hex.length() + 1) / 2];
+    for (int i = 0; i < hex.length(); i++) {
+      byte x = (byte) hex.charAt(i);
+      if (x >= '0' && x <= '9')
+        x -= '0';
+      else if (x >= 'a' && x <= 'f')
+        x = (byte) ((x - 'a') + 0xa);
+      else if (x >= 'A' && x <= 'F')
+        x = (byte) ((x - 'A') + 0xA);
+      else
+        throw new RuntimeException("Invalid hex char "+x);
+      if (i % 2 == 0)
+        x <<= 4;
+      bytes[i / 2] |= x;
+    }
+    return bytes;
   }
 }
