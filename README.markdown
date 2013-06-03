@@ -64,6 +64,31 @@ by timestamp.
     STORE lines INTO 'line';
 
 
+Supported functions
+===================
+Here is a list of all functions that are currently supported.
+
+Conversion functions
+--------------------
+ 
++ *ST_AsHex* Converts a shape to its Well-Known Binary (WKB) format encoded as Hex string
++ *ST_AsText* Converts a shape to its Well-Known Text (WKT) format
+
+Elementary functions
+--------------------
++ *ST_MakePoint* Creates a geometry point given two numeric coordinates
++ *ST_Area* Calculates the area of a surface shape (e.g., Polygon)
+
+
+
+Aggregate functions
+-------------------
++ *ST_MakeLine* Creates a line string given a bag of points
++ *ST_ConvexHull* Computes the convex hull from a bag of shapes
++ *ST_Union* Compuates the spatial union of a set of surfaces (e.g., Polygons)
+
+
+
 Contribution
 ============
 Pigeon is open source and licensed under the Apache open source license. Your
