@@ -28,7 +28,8 @@ import com.esri.core.geometry.SpatialReference;
 import com.esri.core.geometry.ogc.OGCPolygon;
 
 /**
- * Generates a geometry of type LineString out of a bag of points.
+ * Generates a geometry of type Polygon out of a bag of points. The last point
+ * in the bag should be the same as the first point.
  * @author Ahmed Eldawy
  */
 public class MakePolygon extends EvalFunc<DataByteArray>{
