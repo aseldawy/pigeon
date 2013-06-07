@@ -78,15 +78,21 @@ Elementary functions
 --------------------
 + *ST_MakePoint* Creates a geometry point given two numeric coordinates
 + *ST_Area* Calculates the area of a surface shape (e.g., Polygon)
++ *ST_Envelope* Calculated the envelope (MBR) of a shape
 
+
+Boolean functions
+-----------------
++ *ST_Crosses* Checks if one polygon crosses another polygon
 
 
 Aggregate functions
 -------------------
 + *ST_MakeLine* Creates a line string given a bag of points
++ *ST_MakePolygon* Creates a polygon given a circular list of points
 + *ST_ConvexHull* Computes the convex hull from a bag of shapes
-+ *ST_Union* Compuates the spatial union of a set of surfaces (e.g., Polygons)
-
++ *ST_Union* Computes the spatial union of a set of surfaces (e.g., Polygons)
++ *ST_Extent* Computes the minimal bounding rectangle (MBR) of a set of shapes
 
 
 Contribution
