@@ -43,7 +43,10 @@ public class ConvexHull extends EvalFunc<DataByteArray> implements Algebraic,
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
-    return new DataByteArray(convexHull(input).asBinary().array());
+    if (input.get(0) instanceof DataBag)
+      return new DataByteArray(convexHull(input).asBinary().array());
+    OGCGeometry geom = geometryParser.parseGeom(input.get(0));
+    return new DataByteArray(geom.convexHull().asBinary().array());
   }
 
   @Override

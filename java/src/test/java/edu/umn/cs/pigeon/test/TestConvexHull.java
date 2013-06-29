@@ -113,4 +113,29 @@ public class TestConvexHull extends TestCase {
     assertEquals(1, output_size);
   }
 
+  public void testShouldWorkAsUnaryOperation() throws Exception {
+    String datafile = TestHelper.createTempFile(data, "\t");
+    datafile = datafile.replace("\\", "\\\\");
+    PigServer pig = new PigServer(LOCAL);
+
+    String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
+      "B = FOREACH A GENERATE "+ConvexHull.class.getName()+"(geom);";
+    pig.registerQuery(query);
+    Iterator<?> it = pig.openIterator("B");
+    
+    int output_size = 0;
+
+    Iterator<OGCGeometry> original = geometries.iterator();
+    while (it.hasNext()) {
+      Tuple tuple = (Tuple) it.next();
+      if (tuple == null)
+        break;
+      output_size++;
+      OGCGeometry true_convex_hull = original.next().convexHull();
+      OGCGeometry calculated_convex_hull = new GeometryParser().parseGeom(tuple.get(0));
+      assertTrue(true_convex_hull.equals(calculated_convex_hull));
+    }
+    assertEquals(3, output_size);
+  }
+
 }
