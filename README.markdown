@@ -76,18 +76,22 @@ Conversion functions
 
 Elementary functions
 --------------------
+
 + *ST_MakePoint* Creates a geometry point given two numeric coordinates
 + *ST_Area* Calculates the area of a surface shape (e.g., Polygon)
 + *ST_Envelope* Calculated the envelope (MBR) of a shape
-
++ *ST_Buffer* Computes a buffer with the specified distance around a geometry.
++ *ST_Size* Returns number of points in a linestring
 
 Boolean functions
 -----------------
-+ *ST_Crosses* Checks if one polygon crosses another polygon
 
++ *ST_Crosses* Checks if one polygon crosses another polygon
++ *ST_IsEmpty* Tests whether a shape is empty or not.
 
 Aggregate functions
 -------------------
+
 + *ST_MakeLine* Creates a line string given a bag of points
 + *ST_MakePolygon* Creates a polygon given a circular list of points
 + *ST_ConvexHull* Computes the convex hull from a bag of shapes
