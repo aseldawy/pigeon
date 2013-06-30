@@ -33,7 +33,7 @@ public class AsHex extends EvalFunc<String> {
   @Override
   public String exec(Tuple t) throws IOException {
     if (t.size() != 1)
-      throw new IOException("ST_AsText expects one geometry argument");
+      throw new IOException("AsHex expects one geometry argument");
     OGCGeometry geom = geometryParser.parseGeom(t.get(0));
     return GeometryParser.bytesToHex(geom.asBinary().array());
   }
