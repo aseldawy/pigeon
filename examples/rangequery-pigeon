@@ -1,0 +1,12 @@
+REGISTER osmx.jar;
+REGISTER pigeon.jar
+REGISTER esri-geometry-api-1.0.jar;
+
+IMPORT 'pigeon_import.pig';
+
+points = LOAD 'points-pigeon' AS (id:long, location);
+
+results = FILTER points BY
+  ST_Contains(ST_MakeBox(-93.175, 45.0077, -93.158, 45.0164), location);
+  
+STORE results INTO 'results-pigeon';

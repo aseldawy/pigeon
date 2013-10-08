@@ -1,0 +1,13 @@
+REGISTER osmx.jar;
+REGISTER pigeon.jar
+REGISTER esri-geometry-api-1.0.jar;
+
+IMPORT 'pigeon_import.pig';
+
+points = LOAD 'points' AS (id:long, lon:double, lat:double);
+
+results = FILTER points BY
+  lon < -93.158 AND lon > -93.175 AND
+  lat > 45.0077 AND lat < 45.0164;
+  
+STORE results INTO 'results';

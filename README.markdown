@@ -79,7 +79,7 @@ Elementary functions
 
 + *ST_MakePoint* Creates a geometry point given two numeric coordinates
 + *ST_Area* Calculates the area of a surface shape (e.g., Polygon)
-+ *ST_Envelope* Calculated the envelope (MBR) of a shape
++ *ST_Envelope* Calculates the envelope (MBR) of a shape
 + *ST_Buffer* Computes a buffer with the specified distance around a geometry.
 + *ST_Size* Returns number of points in a linestring
 
@@ -106,7 +106,7 @@ contribution is highly welcome and appreciated. Here is a simple guideline of
 how to contribute.
 
 1. Clone your own copy of the source code or fork the project in github.
-2. Pickup an issue from the list of issues associated with the project.
+2. Pick an issue from the list of issues associated with the project.
 3. Write a test case for the new functionality and make sure it fails.
 4. Fix the code so that the test case succeeds.
 5. Make sure that all existing tests still pass.
