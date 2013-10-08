@@ -87,6 +87,6 @@ public class TestHelper extends TestCase {
     }
     pw.close();
     tmpFile.deleteOnExit();
-    return tmpFile.toURI().toString();
+    return tmpFile.getAbsolutePath();
   }
 }

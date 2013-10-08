@@ -64,16 +64,13 @@ public class TestDifference extends TestCase {
     Iterator<?> it = pig.openIterator("B");
     Iterator<OGCGeometry> geoms1 = geometries1.iterator();
     Iterator<OGCGeometry> geoms2 = geometries2.iterator();
-    int count = 0;
     while (it.hasNext() && geoms1.hasNext() && geoms2.hasNext()) {
       Tuple tuple = (Tuple) it.next();
       if (tuple == null)
         break;
-      count++;
       OGCGeometry pig_result = new GeometryParser().parseGeom(tuple.get(0));
       OGCGeometry true_result = geoms1.next().difference(geoms2.next());
       assertTrue(true_result.equals(pig_result));
     }
-    assertEquals(1, count);
   }
 }
