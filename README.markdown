@@ -68,26 +68,30 @@ Supported functions
 ===================
 Here is a list of all functions that are currently supported.
 
-Conversion functions
---------------------
- 
+Basic Spatial Functions
+-----------------------
+
 + *ST_AsHex* Converts a shape to its Well-Known Binary (WKB) format encoded as Hex string
 + *ST_AsText* Converts a shape to its Well-Known Text (WKT) format
-
-Elementary functions
---------------------
-
 + *ST_MakePoint* Creates a geometry point given two numeric coordinates
 + *ST_Area* Calculates the area of a surface shape (e.g., Polygon)
 + *ST_Envelope* Calculated the envelope (MBR) of a shape
-+ *ST_Buffer* Computes a buffer with the specified distance around a geometry.
 + *ST_Size* Returns number of points in a linestring
 
-Boolean functions
------------------
+Spatial Predicates
+------------------
 
 + *ST_Crosses* Checks if one polygon crosses another polygon
 + *ST_IsEmpty* Tests whether a shape is empty or not.
+
+
+Spatial Analysis
+----------------
+
++ *ST_Buffer* Computes a buffer with the specified distance around a geometry.
++ *ST_ConvexHull* Computes the minimal convex polygon of a shape.
+
+
 
 Aggregate functions
 -------------------
