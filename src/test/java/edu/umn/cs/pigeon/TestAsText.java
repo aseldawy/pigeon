@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.pigeon.test;
+package edu.umn.cs.pigeon;
 
 import static org.apache.pig.ExecType.LOCAL;
 
@@ -21,34 +21,29 @@ import java.util.Iterator;
 import junit.framework.TestCase;
 
 import org.apache.pig.PigServer;
+import org.apache.pig.data.Tuple;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
 
-import edu.umn.cs.pigeon.Crosses;
+import edu.umn.cs.pigeon.AsText;
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestCrosses extends TestCase {
+public class TestAsText extends TestCase {
   
   private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestCrosses() {
+  public TestAsText() {
     geometries = new ArrayList<OGCGeometry>();
-    geometries.add(OGCGeometry.fromText("Linestring (0 0, 3 3)"));
-    geometries.add(OGCGeometry.fromText("Linestring (0 3, 3 0)"));
-    geometries.add(OGCGeometry.fromText("Linestring (0 0, 0 3)"));
-    geometries.add(OGCGeometry.fromText("Linestring (0 3, 3 0)"));
-    geometries.add(OGCGeometry.fromText("Linestring (0 0, 3 0)"));
-    geometries.add(OGCGeometry.fromText("Linestring (0 3, 3 3)"));
-
+    geometries.add(OGCGeometry.fromText("Polygon ((0 0, 0 3, 4 5, 10 0, 0 0))"));
+    
     data = new ArrayList<String[]>();
-    for (int i = 0; i < geometries.size(); i += 2) {
-      data.add(new String[] {Integer.toString(i), geometries.get(i).asText(),
-          geometries.get(i+1).asText()});
+    for (int i = 0; i < geometries.size(); i++) {
+      data.add(new String[] {Integer.toString(i), geometries.get(i).asText()});
     }
   }
   
@@ -56,16 +51,19 @@ public class TestCrosses extends TestCase {
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
-    String query = "A = LOAD 'file:" + datafile + "' as (id, geom1, geom2);\n" +
-      "B = FILTER A BY "+Crosses.class.getName()+"(geom1, geom2);";
+    String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
+      "B = FOREACH A GENERATE "+AsText.class.getName()+"(geom);";
     pig.registerQuery(query);
     Iterator<?> it = pig.openIterator("B");
     Iterator<OGCGeometry> geoms = geometries.iterator();
-    int count = 0;
     while (it.hasNext() && geoms.hasNext()) {
-      it.next();
-      count++;
+      Tuple tuple = (Tuple) it.next();
+      OGCGeometry geom = geoms.next();
+      if (tuple == null)
+        break;
+      String wkt = (String) tuple.get(0);
+      assertEquals(geom.asText(), wkt);
     }
-    assertEquals(1, count);
   }
+
 }

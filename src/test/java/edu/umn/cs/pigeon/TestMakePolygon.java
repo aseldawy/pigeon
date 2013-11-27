@@ -11,47 +11,51 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.pigeon.test;
+package edu.umn.cs.pigeon;
 
 import static org.apache.pig.ExecType.LOCAL;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
 
 import org.apache.pig.PigServer;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.Polygon;
 import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
-import edu.umn.cs.pigeon.GeometryParser;
-import edu.umn.cs.pigeon.Union;
+import edu.umn.cs.pigeon.MakePolygon;
 
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestUnion extends TestCase {
+public class TestMakePolygon extends TestCase {
   
   private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestUnion() {
+  public TestMakePolygon() {
     geometries = new ArrayList<OGCGeometry>();
-
-    // Create polygons
-    geometries.add(OGCGeometry.fromText("Polygon((0 0, 6 0, 0 5, 0 0))"));
-    geometries.add(OGCGeometry.fromText("Polygon((2 2, 7 2, 2 6, 2 2))"));
-    geometries.add(OGCGeometry.fromText("Polygon((3 -2, 8 -1, 8 4, 3 -2))"));
-
+    geometries.add(OGCGeometry.fromText("Polygon((0 0, 0 3, 4 5, 10 0, 0 0))"));
+    geometries.add(OGCGeometry.fromText("Polygon((5 6, 10 3, 7  13, 5 6))"));
+    
     data = new ArrayList<String[]>();
-    for (int i = 0; i < geometries.size(); i++) {
-      data.add(new String[] {Integer.toString(i), geometries.get(i).asText()});
+    for (int i_geom = 0; i_geom < geometries.size(); i_geom++) {
+      OGCGeometry geom = geometries.get(i_geom);
+      Polygon polygon = (Polygon) geom.getEsriGeometry();
+      for (int i_point = 0; i_point < polygon.getPointCount(); i_point++) {
+        Point point = polygon.getPoint(i_point);
+        data.add(new String[] {Integer.toString(i_geom), Integer.toString(i_point),
+            "Point ("+point.getX()+" "+point.getY()+")"});
+      }
     }
   }
   
@@ -59,28 +63,23 @@ public class TestUnion extends TestCase {
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
-    String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
-      "B = GROUP A ALL;\n" +
-      "C = FOREACH B GENERATE "+Union.class.getName()+"(A.geom);";
+    String query = "A = LOAD 'file:" + datafile + "' as (geom_id, point_pos, point);\n" +
+      "B = ORDER A BY point_pos;" +
+      "C = GROUP B BY geom_id;" +
+      "D = FOREACH C GENERATE group, "+MakePolygon.class.getName()+"(B.point);";
     pig.registerQuery(query);
-    Iterator<?> it = pig.openIterator("C");
-    
-    // Calculate the union outside Pig
-    OGCGeometryCollection geometry_collection = new OGCConcreteGeometryCollection(
-        geometries, geometries.get(0).getEsriSpatialReference());
-    OGCGeometry true_union = geometry_collection.union(geometries.get(1));
-    
-    int output_size = 0;
-    
-    while (it.hasNext()) {
+    Iterator<?> it = pig.openIterator("D");
+    Iterator<OGCGeometry> geoms = geometries.iterator();
+    int count = 0;
+    while (it.hasNext() && geoms.hasNext()) {
       Tuple tuple = (Tuple) it.next();
+      OGCGeometry geom = geoms.next();
       if (tuple == null)
         break;
-      output_size++;
-      OGCGeometry calculated_union = new GeometryParser().parseGeom(tuple.get(0));
-      assertTrue(true_union.equals(calculated_union));
+      assertTrue(Arrays.equals(geom.asBinary().array(), ((DataByteArray)tuple.get(1)).get()));
+      count++;
     }
-    assertEquals(1, output_size);
+    assertEquals(geometries.size(), count);
   }
 
 }

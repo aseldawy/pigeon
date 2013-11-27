@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.pigeon.test;
+package edu.umn.cs.pigeon;
 
 import static org.apache.pig.ExecType.LOCAL;
 
@@ -23,26 +23,32 @@ import junit.framework.TestCase;
 import org.apache.pig.PigServer;
 import org.apache.pig.data.Tuple;
 
-import com.esri.core.geometry.Polygon;
+import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
 import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
-import edu.umn.cs.pigeon.Area;
+import edu.umn.cs.pigeon.GeometryParser;
+import edu.umn.cs.pigeon.Union;
+
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestArea extends TestCase {
+public class TestUnion extends TestCase {
   
   private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestArea() {
+  public TestUnion() {
     geometries = new ArrayList<OGCGeometry>();
-    geometries.add(OGCGeometry.fromText("Polygon ((0 0, 0 3, 4 5, 10 0, 0 0))"))
-    ;
-    
+
+    // Create polygons
+    geometries.add(OGCGeometry.fromText("Polygon((0 0, 6 0, 0 5, 0 0))"));
+    geometries.add(OGCGeometry.fromText("Polygon((2 2, 7 2, 2 6, 2 2))"));
+    geometries.add(OGCGeometry.fromText("Polygon((3 -2, 8 -1, 8 4, 3 -2))"));
+
     data = new ArrayList<String[]>();
     for (int i = 0; i < geometries.size(); i++) {
       data.add(new String[] {Integer.toString(i), geometries.get(i).asText()});
@@ -54,18 +60,27 @@ public class TestArea extends TestCase {
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
     String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
-      "B = FOREACH A GENERATE "+Area.class.getName()+"(geom);";
+      "B = GROUP A ALL;\n" +
+      "C = FOREACH B GENERATE "+Union.class.getName()+"(A.geom);";
     pig.registerQuery(query);
-    Iterator<?> it = pig.openIterator("B");
-    Iterator<OGCGeometry> geoms = geometries.iterator();
-    while (it.hasNext() && geoms.hasNext()) {
+    Iterator<?> it = pig.openIterator("C");
+    
+    // Calculate the union outside Pig
+    OGCGeometryCollection geometry_collection = new OGCConcreteGeometryCollection(
+        geometries, geometries.get(0).getEsriSpatialReference());
+    OGCGeometry true_union = geometry_collection.union(geometries.get(1));
+    
+    int output_size = 0;
+    
+    while (it.hasNext()) {
       Tuple tuple = (Tuple) it.next();
-      OGCGeometry geom = geoms.next();
       if (tuple == null)
         break;
-      Double area = (Double) tuple.get(0);
-      assertEquals(((Polygon)geom.getEsriGeometry()).calculateArea2D(), area);
+      output_size++;
+      OGCGeometry calculated_union = new GeometryParser().parseGeom(tuple.get(0));
+      assertTrue(true_union.equals(calculated_union));
     }
+    assertEquals(1, output_size);
   }
 
 }

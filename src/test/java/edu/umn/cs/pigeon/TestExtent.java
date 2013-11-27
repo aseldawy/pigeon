@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package edu.umn.cs.pigeon.test;
+package edu.umn.cs.pigeon;
 
 import static org.apache.pig.ExecType.LOCAL;
 
@@ -23,34 +23,35 @@ import junit.framework.TestCase;
 import org.apache.pig.PigServer;
 import org.apache.pig.data.Tuple;
 
+import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
 import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
-import edu.umn.cs.pigeon.Difference;
+import edu.umn.cs.pigeon.Extent;
 import edu.umn.cs.pigeon.GeometryParser;
+
 
 /**
  * @author Ahmed Eldawy
  *
  */
-public class TestDifference extends TestCase {
+public class TestExtent extends TestCase {
   
-  private ArrayList<OGCGeometry> geometries1;
-  private ArrayList<OGCGeometry> geometries2;
+  private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
   
   
-  public TestDifference() {
-    geometries1 = new ArrayList<OGCGeometry>();
-    geometries2 = new ArrayList<OGCGeometry>();
-    geometries1.add(OGCGeometry.fromText("Polygon ((0 0, 0 3, 3 3, 3 0, 0 0))"));
-    geometries2.add(OGCGeometry.fromText("Polygon ((4 2, 4 4, 2 4, 4 2))"));
-    geometries1.add(OGCGeometry.fromText("Polygon ((0 0, 0 3, 3 3, 3 0, 0 0))"));
-    geometries2.add(OGCGeometry.fromText("Polygon ((7 2, 7 4, 5 4, 7 2))"));
+  public TestExtent() {
+    geometries = new ArrayList<OGCGeometry>();
+
+    // Create polygons
+    geometries.add(OGCGeometry.fromText("Polygon((0 0, 6 0, 0 5, 0 0))"));
+    geometries.add(OGCGeometry.fromText("Linestring(2 2, 7 2, 2 6)"));
+    geometries.add(OGCGeometry.fromText("Point(3 -2)"));
 
     data = new ArrayList<String[]>();
-    for (int i = 0; i < geometries1.size(); i++) {
-      data.add(new String[] {Integer.toString(i), geometries1.get(i).asText(),
-          geometries2.get(i).asText()});
+    for (int i = 0; i < geometries.size(); i++) {
+      data.add(new String[] {Integer.toString(i), geometries.get(i).asText()});
     }
   }
   
@@ -58,19 +59,28 @@ public class TestDifference extends TestCase {
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
-    String query = "A = LOAD 'file:" + datafile + "' as (id, geom1, geom2);\n" +
-      "B = FOREACH A GENERATE "+Difference.class.getName()+"(geom1, geom2);";
+    String query = "A = LOAD 'file:" + datafile + "' as (id, geom);\n" +
+      "B = GROUP A ALL;\n" +
+      "C = FOREACH B GENERATE "+Extent.class.getName()+"(A.geom);";
     pig.registerQuery(query);
-    Iterator<?> it = pig.openIterator("B");
-    Iterator<OGCGeometry> geoms1 = geometries1.iterator();
-    Iterator<OGCGeometry> geoms2 = geometries2.iterator();
-    while (it.hasNext() && geoms1.hasNext() && geoms2.hasNext()) {
+    Iterator<?> it = pig.openIterator("C");
+    
+    // Calculate the union outside Pig
+    OGCGeometryCollection geometry_collection = new OGCConcreteGeometryCollection(
+        geometries, geometries.get(0).getEsriSpatialReference());
+    OGCGeometry true_mbr = geometry_collection.envelope();
+    
+    int output_size = 0;
+    
+    while (it.hasNext()) {
       Tuple tuple = (Tuple) it.next();
       if (tuple == null)
         break;
-      OGCGeometry pig_result = new GeometryParser().parseGeom(tuple.get(0));
-      OGCGeometry true_result = geoms1.next().difference(geoms2.next());
-      assertTrue(true_result.equals(pig_result));
+      output_size++;
+      OGCGeometry calculated_mbr = new GeometryParser().parseGeom(tuple.get(0));
+      assertTrue(true_mbr.equals(calculated_mbr));
     }
+    assertEquals(1, output_size);
   }
+
 }

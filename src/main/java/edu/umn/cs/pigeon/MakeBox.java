@@ -26,6 +26,8 @@ import com.esri.core.geometry.SpatialReference;
 import com.esri.core.geometry.ogc.OGCPolygon;
 
 /**
+ * A UDF to create a box (rectangle) from the coordinates of the two corners
+ * x1, y1, x2, and y2.
  * @author Ahmed Eldawy
  *
  */
