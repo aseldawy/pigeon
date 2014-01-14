@@ -48,12 +48,16 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
     Point[] coordinates = new Point[(int) pointLocations.size()];
     int i = 0;
     Iterator<Tuple> iter_id = pointIDs.iterator();
-    int first_point_id = -1;
+    long first_point_id = -1;
     boolean is_polygon = false;
     for (Tuple t : pointLocations) {
-      int point_id = (int) iter_id.next().get(0);
+      Object point_id_obj = iter_id.next().get(0);
+      long point_id = point_id_obj instanceof Integer?
+          (int) point_id_obj :
+          (long) point_id_obj;
       if (i == 0) {
         first_point_id = point_id;
+        System.out.println(t.get(0));
         coordinates[i++] =
             (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
       } else if (i == pointIDs.size() - 1) {
@@ -67,6 +71,13 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
         coordinates[i++] =
             (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
       }
+    }
+    if (is_polygon && coordinates.length <= 3) {
+      // Cannot create a polygon with two corners, convert to Linestring
+      Point[] new_coords = new Point[coordinates.length - 1];
+      System.arraycopy(coordinates, 0, new_coords, 0, new_coords.length);
+      coordinates = new_coords;
+      is_polygon = false;
     }
     MultiPath multi_path = is_polygon ? new Polygon() : new Polyline();
     // Iterate over all segments. Skip last segment for polygons because

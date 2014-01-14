@@ -28,7 +28,6 @@ import org.apache.pig.data.Tuple;
 import com.esri.core.geometry.MultiPath;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
-import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.ogc.OGCGeometry;
 
 
@@ -40,7 +39,6 @@ public class TestMakeLinePolygon extends TestCase {
   
   private ArrayList<OGCGeometry> geometries;
   private ArrayList<String[]> data;
-  
   
   public TestMakeLinePolygon() {
     geometries = new ArrayList<OGCGeometry>();
@@ -85,18 +83,41 @@ public class TestMakeLinePolygon extends TestCase {
     Iterator<?> it = pig.openIterator("D");
     Iterator<OGCGeometry> geoms = geometries.iterator();
     int count = 0;
-    GeometryParser geom_parser = new GeometryParser();
     while (it.hasNext() && geoms.hasNext()) {
       Tuple tuple = (Tuple) it.next();
       OGCGeometry geom = geoms.next();
       if (tuple == null)
         break;
-      System.out.println("Expected: "+geom.asText());
-      System.out.println("Resulted: "+geom_parser.parseGeom((DataByteArray)tuple.get(1)).asText());
       assertTrue(Arrays.equals(geom.asBinary().array(), ((DataByteArray)tuple.get(1)).get()));
       count++;
     }
     assertEquals(geometries.size(), count);
+  }
+
+  public void testShouldFallBackToLinestringForShortLists() throws Exception {
+    ArrayList<String[]> data = new ArrayList<String[]>();
+    data.add(new String[] {"1", "1", "0", "Point (0 0)"});
+    data.add(new String[] {"1", "2", "1", "Point (4 5)"});
+    data.add(new String[] {"1", "1", "2", "Point (0 0)"});
+    String datafile = TestHelper.createTempFile(data, "\t");
+    datafile = datafile.replace("\\", "\\\\");
+    PigServer pig = new PigServer(LOCAL);
+    String query = "A = LOAD 'file:" + datafile + "' as (geom_id: int, point_id: int, point_pos: int, point);\n" +
+      "B = ORDER A BY point_pos;" +
+      "C = GROUP B BY geom_id;" +
+      "D = FOREACH C GENERATE group, "+MakeLinePolygon.class.getName()+"(B.point_id, B.point);";
+    pig.registerQuery(query);
+    Iterator<?> it = pig.openIterator("D");
+    int count = 0;
+    while (it.hasNext()) {
+      Tuple tuple = (Tuple) it.next();
+      if (tuple == null)
+        break;
+      OGCGeometry geom = OGCGeometry.fromText("Linestring(0 0, 4 5)");
+      assertTrue(Arrays.equals(geom.asBinary().array(), ((DataByteArray)tuple.get(1)).get()));
+      count++;
+    }
+    assertEquals(1, count);
   }
 
 }
