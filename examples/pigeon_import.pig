@@ -11,6 +11,7 @@ DEFINE ST_IsEmpty edu.umn.cs.pigeon.Is_Empty;
 DEFINE ST_MakeLine edu.umn.cs.pigeon.MakeLine;
 DEFINE ST_MakePoint edu.umn.cs.pigeon.MakePoint;
 DEFINE ST_MakePolygon edu.umn.cs.pigeon.MakePolygon;
+DEFINE ST_MakeLinePolygon edu.umn.cs.pigeon.MakeLinePolygon;
 DEFINE ST_MakeBox edu.umn.cs.pigeon.MakeBox;
 DEFINE ST_Overlaps edu.umn.cs.pigeon.Overlaps;
 DEFINE ST_Size edu.umn.cs.pigeon.Size;
