@@ -29,8 +29,6 @@ import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
 import com.esri.core.geometry.ogc.OGCGeometry;
 
-import edu.umn.cs.pigeon.MakePolygon;
-
 
 /**
  * @author Ahmed Eldawy

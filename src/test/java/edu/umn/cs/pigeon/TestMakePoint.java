@@ -28,8 +28,6 @@ import com.esri.core.geometry.Point;
 import com.esri.core.geometry.SpatialReference;
 import com.esri.core.geometry.ogc.OGCPoint;
 
-import edu.umn.cs.pigeon.MakePoint;
-
 /**
  * @author Ahmed Eldawy
  *

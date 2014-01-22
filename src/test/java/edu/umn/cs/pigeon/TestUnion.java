@@ -27,9 +27,6 @@ import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
 import com.esri.core.geometry.ogc.OGCGeometry;
 import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
-import edu.umn.cs.pigeon.GeometryParser;
-import edu.umn.cs.pigeon.Union;
-
 
 /**
  * @author Ahmed Eldawy

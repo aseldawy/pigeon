@@ -21,8 +21,6 @@ import org.apache.pig.data.DataByteArray;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
 
-import edu.umn.cs.pigeon.GeometryParser;
-
 public class TestGeometryParser extends TestCase {
   
   private GeometryParser geometry_parser = new GeometryParser();

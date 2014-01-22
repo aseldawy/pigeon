@@ -26,8 +26,6 @@ import org.apache.pig.data.Tuple;
 import com.esri.core.geometry.Polygon;
 import com.esri.core.geometry.ogc.OGCGeometry;
 
-import edu.umn.cs.pigeon.Area;
-
 /**
  * @author Ahmed Eldawy
  *

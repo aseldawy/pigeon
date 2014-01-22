@@ -24,8 +24,6 @@ import org.apache.pig.PigServer;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
 
-import edu.umn.cs.pigeon.Crosses;
-
 /**
  * @author Ahmed Eldawy
  *

@@ -25,8 +25,6 @@ import org.apache.pig.data.Tuple;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
 
-import edu.umn.cs.pigeon.AsText;
-
 /**
  * @author Ahmed Eldawy
  *
