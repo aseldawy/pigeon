@@ -69,6 +69,9 @@ public class Connect extends EvalFunc<DataByteArray>{
     // Keep track of the first and last point IDs for the connected list
     Vector<OGCLineString> connected_lines = new Vector<OGCLineString>();
     connected_lines.add(linestrings.remove(0));
+    // Which linestrings to reverse upon connection
+    Vector<Boolean> reverse = new Vector<Boolean>();
+    reverse.add(false);
     long first_point_id = firstPointId.remove(0);
     long last_point_id = lastPointId.remove(0);
     
@@ -85,11 +88,25 @@ public class Connect extends EvalFunc<DataByteArray>{
           lastPointId.remove(i);
           first_point_id = firstPointId.remove(i);
           connected_lines.add(0, linestrings.remove(i));
+          reverse.add(0, false);
+        } else if (firstPointId.get(i) == first_point_id) {
+          // Should go to the beginning after being reversed
+          firstPointId.remove(i);
+          first_point_id = lastPointId.remove(i);
+          connected_lines.add(0, linestrings.remove(i));
+          reverse.add(0, true);
         } else if (firstPointId.get(i) == last_point_id) {
           // This linestring goes to the end of the list as-is
           firstPointId.remove(i);
           last_point_id = lastPointId.remove(i);
           connected_lines.add(linestrings.remove(i));
+          reverse.add(false);
+        } else if (lastPointId.get(i) == last_point_id) {
+          // Should go to the end after being reversed
+          lastPointId.remove(i);
+          last_point_id = firstPointId.remove(i);
+          connected_lines.add(linestrings.remove(i));
+          reverse.add(true);
         } else {
           i++;
         }
@@ -103,9 +120,13 @@ public class Connect extends EvalFunc<DataByteArray>{
       // A polygon
       Point[] points = new Point[sumPoints - connected_lines.size()];
       int n = 0;
-      for (OGCLineString linestring : connected_lines) {
+      for (int i = 0; i < connected_lines.size(); i++) {
+        OGCLineString linestring = connected_lines.get(i);
+        boolean isReverse = reverse.get(i);
         for (int i_point = 0; i_point < linestring.numPoints() - 1; i_point++) {
-          points[n++] = (Point) linestring.pointN(i_point).getEsriGeometry();
+          points[n++] = (Point) linestring.pointN(
+              isReverse? linestring.numPoints() - 1 - i_point : i_point
+              ).getEsriGeometry();
         }
       }
       Polygon multi_path = new Polygon();
