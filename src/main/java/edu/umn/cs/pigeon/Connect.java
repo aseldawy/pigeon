@@ -140,8 +140,8 @@ public class Connect extends EvalFunc<DataByteArray>{
           SpatialReference.create(4326));
       return new DataByteArray(polygon.asBinary().array());
     }
-    
     return null;
+//    throw new ExecException("Cannot connect a non-polygon shape");
   }
 
 }

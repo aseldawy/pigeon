@@ -57,7 +57,6 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
           (long) point_id_obj;
       if (i == 0) {
         first_point_id = point_id;
-        System.out.println(t.get(0));
         coordinates[i++] =
             (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
       } else if (i == pointIDs.size() - 1) {

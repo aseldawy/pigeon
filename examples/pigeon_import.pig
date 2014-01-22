@@ -2,6 +2,7 @@ DEFINE ST_Area edu.umn.cs.pigeon.Area;
 DEFINE ST_AsHex edu.umn.cs.pigeon.AsHex;
 DEFINE ST_AsText edu.umn.cs.pigeon.AsText;
 DEFINE ST_Buffer edu.umn.cs.pigeon.Buffer;
+DEFINE ST_Connect edu.umn.cs.pigeon.Connect;
 DEFINE ST_Contains edu.umn.cs.pigeon.Contains;
 DEFINE ST_ConvexHull edu.umn.cs.pigeon.ConvexHull;
 DEFINE ST_Crosses edu.umn.cs.pigeon.Crosses;
