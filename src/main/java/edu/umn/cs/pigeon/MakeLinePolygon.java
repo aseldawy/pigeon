@@ -53,8 +53,8 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
     for (Tuple t : pointLocations) {
       Object point_id_obj = iter_id.next().get(0);
       long point_id = point_id_obj instanceof Integer?
-          (int) point_id_obj :
-          (long) point_id_obj;
+          (Integer) point_id_obj :
+          (Long) point_id_obj;
       if (i == 0) {
         first_point_id = point_id;
         coordinates[i++] =

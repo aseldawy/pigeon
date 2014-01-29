@@ -44,12 +44,12 @@ public class Connect extends EvalFunc<DataByteArray>{
     // Read information from input
     Vector<Long> firstPointId = new Vector<Long>();
     for (Tuple t : (DataBag) b.get(0)) {
-      firstPointId.add((long) t.get(0));
+      firstPointId.add((Long) t.get(0));
     }
     
     Vector<Long> lastPointId = new Vector<Long>();
     for (Tuple t : (DataBag) b.get(1)) {
-      lastPointId.add((long) t.get(0));
+      lastPointId.add((Long) t.get(0));
     }
 
     int sumPoints = 0;
