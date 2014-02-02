@@ -23,10 +23,15 @@ import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
 import com.esri.core.geometry.Line;
+import com.esri.core.geometry.MultiPath;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
+import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.Segment;
 import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCGeometryCollection;
 import com.esri.core.geometry.ogc.OGCLineString;
 import com.esri.core.geometry.ogc.OGCPolygon;
 
@@ -52,11 +57,9 @@ public class Connect extends EvalFunc<DataByteArray>{
       lastPointId.add((Long) t.get(0));
     }
 
-    int sumPoints = 0;
     Vector<OGCLineString> linestrings = new Vector<OGCLineString>();
     for (Tuple t : (DataBag) b.get(2)) {
       linestrings.add((OGCLineString) geometryParser.parseGeom(t.get(0)));
-      sumPoints += linestrings.lastElement().numPoints();
     }
     
     if (firstPointId.size() != lastPointId.size() ||
@@ -66,14 +69,16 @@ public class Connect extends EvalFunc<DataByteArray>{
           + linestrings.size() + ")");
     }
 
-    // Keep track of the first and last point IDs for the connected list
+    // Shapes that are created after connected line segments
+    Vector<OGCGeometry> createdShapes = new Vector<OGCGeometry>();
+    // Stores an ordered list of line segments in current connected block
     Vector<OGCLineString> connected_lines = new Vector<OGCLineString>();
-    connected_lines.add(linestrings.remove(0));
+    // Total number of points in all visited linestrings
+    int sumPoints = 0;
     // Which linestrings to reverse upon connection
     Vector<Boolean> reverse = new Vector<Boolean>();
-    reverse.add(false);
-    long first_point_id = firstPointId.remove(0);
-    long last_point_id = lastPointId.remove(0);
+    long first_point_id = -1;
+    long last_point_id = -1;
     
     // Reorder linestrings to form a contiguous list of connected linestrings
     while (!linestrings.isEmpty()) {
@@ -83,65 +88,92 @@ public class Connect extends EvalFunc<DataByteArray>{
       // while keeping them connected
       int size_before = connected_lines.size();
       for (int i = 0; i < linestrings.size();) {
-        if (lastPointId.get(i) == first_point_id) {
+        if (connected_lines.isEmpty()) {
+          // First linestring
+          first_point_id = firstPointId.remove(i);
+          last_point_id = lastPointId.remove(i);
+          reverse.add(false);
+          sumPoints += linestrings.get(i).numPoints();
+          connected_lines.add(linestrings.remove(i));
+        } else if (lastPointId.get(i) == first_point_id) {
           // This linestring goes to the beginning of the list as-is
           lastPointId.remove(i);
           first_point_id = firstPointId.remove(i);
+          sumPoints += linestrings.get(i).numPoints();
           connected_lines.add(0, linestrings.remove(i));
           reverse.add(0, false);
         } else if (firstPointId.get(i) == first_point_id) {
           // Should go to the beginning after being reversed
           firstPointId.remove(i);
           first_point_id = lastPointId.remove(i);
+          sumPoints += linestrings.get(i).numPoints();
           connected_lines.add(0, linestrings.remove(i));
           reverse.add(0, true);
         } else if (firstPointId.get(i) == last_point_id) {
           // This linestring goes to the end of the list as-is
           firstPointId.remove(i);
           last_point_id = lastPointId.remove(i);
+          sumPoints += linestrings.get(i).numPoints();
           connected_lines.add(linestrings.remove(i));
           reverse.add(false);
         } else if (lastPointId.get(i) == last_point_id) {
           // Should go to the end after being reversed
           lastPointId.remove(i);
           last_point_id = firstPointId.remove(i);
+          sumPoints += linestrings.get(i).numPoints();
           connected_lines.add(linestrings.remove(i));
           reverse.add(true);
         } else {
           i++;
         }
       }
-      if (connected_lines.size() == size_before) {
-        throw new ExecException("Cannot connect any more lines to the block: "+first_point_id+","+last_point_id);
-      }
-    }
-    
-    if (first_point_id == last_point_id) {
-      // A polygon
-      Point[] points = new Point[sumPoints - connected_lines.size()];
-      int n = 0;
-      for (int i = 0; i < connected_lines.size(); i++) {
-        OGCLineString linestring = connected_lines.get(i);
-        boolean isReverse = reverse.get(i);
-        for (int i_point = 0; i_point < linestring.numPoints() - 1; i_point++) {
-          points[n++] = (Point) linestring.pointN(
-              isReverse? linestring.numPoints() - 1 - i_point : i_point
-              ).getEsriGeometry();
+      
+      if (connected_lines.size() == size_before || linestrings.isEmpty()) {
+        // Cannot connect any more lines to the current block. Emit as a shape
+        // A polygon
+        boolean isPolygon = first_point_id == last_point_id;
+        Point[] points = new Point[sumPoints - connected_lines.size() + (isPolygon? 0 : 1)];
+        int n = 0;
+        for (int i = 0; i < connected_lines.size(); i++) {
+          OGCLineString linestring = connected_lines.get(i);
+          boolean isReverse = reverse.get(i);
+          int last_i = (isPolygon || i < connected_lines.size() - 1)?
+              linestring.numPoints() - 1 : linestring.numPoints();
+          for (int i_point = 0; i_point < last_i; i_point++) {
+            points[n++] = (Point) linestring.pointN(
+                isReverse? linestring.numPoints() - 1 - i_point : i_point
+                ).getEsriGeometry();
+          }
+        }
+        
+        MultiPath multi_path = isPolygon ? new Polygon() : new Polyline();
+        for (int i = 1; i <points.length; i++) {
+          Segment segment = new Line();
+          segment.setStart(points[i-1]);
+          segment.setEnd(points[i]);
+          multi_path.addSegment(segment, false);
+        }
+        createdShapes.add(isPolygon ? new OGCPolygon((Polygon) multi_path, 0,
+            SpatialReference.create(4326)) : new OGCLineString(
+            (Polyline) multi_path, 0, SpatialReference.create(4326)));
+
+        // Re-initialize all data structures to connect remaining lines
+        if (!linestrings.isEmpty()) {
+          connected_lines.clear();
+          reverse.clear();
+          sumPoints = 0;
         }
       }
-      Polygon multi_path = new Polygon();
-      for (int i = 1; i <points.length; i++) {
-        Segment segment = new Line();
-        segment.setStart(points[i-1]);
-        segment.setEnd(points[i]);
-        multi_path.addSegment(segment, false);
-      }
-      OGCPolygon polygon = new OGCPolygon(multi_path, 0,
-          SpatialReference.create(4326));
-      return new DataByteArray(polygon.asBinary().array());
     }
-    return null;
-//    throw new ExecException("Cannot connect a non-polygon shape");
+
+    if (createdShapes.size() == 1) {
+      return new DataByteArray(createdShapes.get(0).asBinary().array());
+    } else if (createdShapes.size() > 1) {
+      OGCGeometryCollection collection = new OGCConcreteGeometryCollection(createdShapes, createdShapes.get(0).getEsriSpatialReference());
+      return new DataByteArray(collection.asBinary().array());
+    } else {
+      throw new ExecException("Cannot connect a non-polygon shape");
+    }
   }
 
 }
