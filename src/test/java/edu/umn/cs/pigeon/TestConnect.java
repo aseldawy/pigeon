@@ -129,4 +129,45 @@ public class TestConnect extends TestCase {
     }
     assertEquals(1, count);
   }
+  
+  public void testShouldWorkWithEntriesOfTypePolygon() throws Exception {
+    ArrayList<String[]> data = new ArrayList<String[]>();
+    data.add(new String[] {"1", "1", "Polygon((0 0, 2 0, 3 1, 0 0))"});
+    data.add(new String[] {"7", "8", "Linestring(10 8, 8 5)"});
+    OGCGeometryCollection expectedResult = (OGCGeometryCollection) OGCGeometry.fromText("GeometryCollection(LineString(10 8, 8 5), "
+        + "Polygon((0 0, 2 0, 3 1, 0 0)))");
+
+    String datafile = TestHelper.createTempFile(data, "\t");
+    datafile = datafile.replace("\\", "\\\\");
+    PigServer pig = new PigServer(LOCAL);
+    String query = "A = LOAD 'file:" + datafile + "' AS (first_point: long, last_point: long, linestring: chararray);\n" +
+        "B = GROUP A ALL;" +
+        "C = FOREACH B GENERATE "+Connect.class.getName()+"(A.first_point, A.last_point, A.linestring);";
+    pig.registerQuery(query);
+    Iterator<?> it = pig.openIterator("C");
+    int count = 0;
+    while (it.hasNext()) {
+      Tuple tuple = (Tuple) it.next();
+      if (tuple == null)
+        break;
+      OGCGeometryCollection returnedResult =
+          (OGCGeometryCollection) new GeometryParser().parseGeom(tuple.get(0));
+      assertEquals(expectedResult.numGeometries(), returnedResult.numGeometries());
+      Vector<OGCGeometry> expectedGeometries = new Vector<OGCGeometry>();
+      for (int i = 0; i < expectedResult.numGeometries(); i++) {
+        expectedGeometries.add(expectedResult.geometryN(i));
+      }
+      for (int i = 0; i < returnedResult.numGeometries(); i++) {
+        OGCGeometry geom = returnedResult.geometryN(i);
+        int j = 0;
+        while (j < expectedGeometries.size() && !geom.equals(expectedGeometries.get(j)))
+          j++;
+
+        assertTrue(j < expectedGeometries.size());
+        expectedGeometries.remove(j++);
+      }
+      count++;
+    }
+    assertEquals(1, count);
+  }
 }

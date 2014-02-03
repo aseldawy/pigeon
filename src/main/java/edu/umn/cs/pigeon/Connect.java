@@ -57,9 +57,23 @@ public class Connect extends EvalFunc<DataByteArray>{
       lastPointId.add((Long) t.get(0));
     }
 
+    // Shapes that are created after connected line segments
+    Vector<OGCGeometry> createdShapes = new Vector<OGCGeometry>();
     Vector<OGCLineString> linestrings = new Vector<OGCLineString>();
+    int geom_i = 0;
     for (Tuple t : (DataBag) b.get(2)) {
-      linestrings.add((OGCLineString) geometryParser.parseGeom(t.get(0)));
+      OGCGeometry geom = geometryParser.parseGeom(t.get(0));
+      if (geom instanceof OGCPolygon) {
+        // Copy to output directly. Polygons cannot be connected to other shapes.
+        createdShapes.add(geom);
+        firstPointId.remove(geom_i);
+        lastPointId.remove(geom_i);
+      } else if (geom instanceof OGCLineString) {
+        linestrings.add((OGCLineString) geom);
+      } else {
+        throw new ExecException("Cannot connect shapes of type "+geom.getClass());
+      }
+      geom_i++;
     }
     
     if (firstPointId.size() != lastPointId.size() ||
@@ -69,8 +83,6 @@ public class Connect extends EvalFunc<DataByteArray>{
           + linestrings.size() + ")");
     }
 
-    // Shapes that are created after connected line segments
-    Vector<OGCGeometry> createdShapes = new Vector<OGCGeometry>();
     // Stores an ordered list of line segments in current connected block
     Vector<OGCLineString> connected_lines = new Vector<OGCLineString>();
     // Total number of points in all visited linestrings
