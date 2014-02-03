@@ -133,9 +133,10 @@ public class TestConnect extends TestCase {
   public void testShouldWorkWithEntriesOfTypePolygon() throws Exception {
     ArrayList<String[]> data = new ArrayList<String[]>();
     data.add(new String[] {"1", "1", "Polygon((0 0, 2 0, 3 1, 0 0))"});
+    data.add(new String[] {"2", "2", "Polygon((5 5, 5 6, 6 5, 5 5))"});
     data.add(new String[] {"7", "8", "Linestring(10 8, 8 5)"});
     OGCGeometryCollection expectedResult = (OGCGeometryCollection) OGCGeometry.fromText("GeometryCollection(LineString(10 8, 8 5), "
-        + "Polygon((0 0, 2 0, 3 1, 0 0)))");
+        + "Polygon((0 0, 2 0, 3 1, 0 0)), Polygon((5 5, 5 6, 6 5, 5 5)))");
 
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");

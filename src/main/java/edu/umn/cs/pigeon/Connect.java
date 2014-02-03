@@ -14,6 +14,7 @@
 package edu.umn.cs.pigeon;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.pig.EvalFunc;
@@ -47,37 +48,36 @@ public class Connect extends EvalFunc<DataByteArray>{
   @Override
   public DataByteArray exec(Tuple b) throws IOException {
     // Read information from input
-    Vector<Long> firstPointId = new Vector<Long>();
-    for (Tuple t : (DataBag) b.get(0)) {
-      firstPointId.add((Long) t.get(0));
-    }
+    Iterator<Tuple> firstPointIdIter = ((DataBag) b.get(0)).iterator();
+    Iterator<Tuple> lastPointIdIter = ((DataBag) b.get(1)).iterator();
+    Iterator<Tuple> shapesIter = ((DataBag) b.get(2)).iterator();
     
-    Vector<Long> lastPointId = new Vector<Long>();
-    for (Tuple t : (DataBag) b.get(1)) {
-      lastPointId.add((Long) t.get(0));
-    }
-
     // Shapes that are created after connected line segments
     Vector<OGCGeometry> createdShapes = new Vector<OGCGeometry>();
     Vector<OGCLineString> linestrings = new Vector<OGCLineString>();
-    int geom_i = 0;
-    for (Tuple t : (DataBag) b.get(2)) {
-      OGCGeometry geom = geometryParser.parseGeom(t.get(0));
+    Vector<Long> firstPointId = new Vector<Long>();
+    Vector<Long> lastPointId = new Vector<Long>();
+
+    while (firstPointIdIter.hasNext() && lastPointIdIter.hasNext() &&
+        shapesIter.hasNext()) {
+      OGCGeometry geom = geometryParser.parseGeom(shapesIter.next().get(0));
+      long first_point_id = (Long) firstPointIdIter.next().get(0);
+      long last_point_id = (Long)lastPointIdIter.next().get(0);
       if (geom instanceof OGCPolygon) {
         // Copy to output directly. Polygons cannot be connected to other shapes.
         createdShapes.add(geom);
-        firstPointId.remove(geom_i);
-        lastPointId.remove(geom_i);
       } else if (geom instanceof OGCLineString) {
         linestrings.add((OGCLineString) geom);
+        firstPointId.add(first_point_id);
+        lastPointId.add(last_point_id);
       } else {
         throw new ExecException("Cannot connect shapes of type "+geom.getClass());
       }
-      geom_i++;
+      
     }
     
-    if (firstPointId.size() != lastPointId.size() ||
-        firstPointId.size() != linestrings.size()) {
+    if (firstPointIdIter.hasNext() || lastPointIdIter.hasNext() ||
+        shapesIter.hasNext()) {
       throw new ExecException("All parameters should be of the same size ("
           + firstPointId.size() + "," + lastPointId.size() + ","
           + linestrings.size() + ")");
