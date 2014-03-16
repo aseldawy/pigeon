@@ -26,7 +26,7 @@ import com.esri.core.geometry.ogc.OGCPolygon;
 
 
 /**
- * Returns the size of a geometry.
+ * Returns the size of a geometry in terms of number of points.
  * For {@link OGCPoint} it always returns one.
  * For {@link OGCLineString} it returns number of points.
  * For {@link OGCPolygon} it returns number of edges.
@@ -46,6 +46,14 @@ public class Size extends EvalFunc<Integer> {
         return 1;
       } else if (geom instanceof OGCLineString) {
         return ((OGCLineString)geom).numPoints();
+      } else if (geom instanceof OGCPolygon) {
+        OGCPolygon poly = (OGCPolygon) geom;
+        int size = 0;
+        size += poly.exterorRing().numPoints();
+        for (int i = 0; i < poly.numInteriorRing(); i++) {
+          size += poly.interiorRingN(i).numPoints();
+        }
+        return size;
       } else {
         throw new ExecException("size() not defined for shapes of type: "+geom.getClass());
       }

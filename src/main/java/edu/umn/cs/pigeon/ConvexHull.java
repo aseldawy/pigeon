@@ -24,6 +24,7 @@ import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 
+import com.esri.core.geometry.GeometryException;
 import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
 import com.esri.core.geometry.ogc.OGCGeometry;
 import com.esri.core.geometry.ogc.OGCGeometryCollection;
@@ -43,10 +44,23 @@ public class ConvexHull extends EvalFunc<DataByteArray> implements Algebraic,
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
-    if (input.get(0) instanceof DataBag)
-      return new DataByteArray(convexHull(input).asBinary().array());
-    OGCGeometry geom = geometryParser.parseGeom(input.get(0));
-    return new DataByteArray(geom.convexHull().asBinary().array());
+    try {
+      if (input.get(0) instanceof DataBag)
+        return new DataByteArray(convexHull(input).asBinary().array());
+      OGCGeometry geom = geometryParser.parseGeom(input.get(0));
+      try {
+        return new DataByteArray(geom.convexHull().asBinary().array());
+      } catch (ArrayIndexOutOfBoundsException e) {
+        e.printStackTrace();
+        throw new RuntimeException(geom.asText(), e);
+      }
+    } catch (GeometryException e) {
+      e.printStackTrace();
+      throw new RuntimeException(input.toString(), e);
+    } catch (ArrayIndexOutOfBoundsException e) {
+      e.printStackTrace();
+      throw new RuntimeException(input.toString(), e);
+    }
   }
 
   @Override

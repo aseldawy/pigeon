@@ -8,7 +8,7 @@ DEFINE ST_ConvexHull edu.umn.cs.pigeon.ConvexHull;
 DEFINE ST_Crosses edu.umn.cs.pigeon.Crosses;
 DEFINE ST_Envelope edu.umn.cs.pigeon.Envelope;
 DEFINE ST_Extent edu.umn.cs.pigeon.Extent;
-DEFINE ST_IsEmpty edu.umn.cs.pigeon.Is_Empty;
+DEFINE ST_IsEmpty edu.umn.cs.pigeon.IsEmpty;
 DEFINE ST_MakeLine edu.umn.cs.pigeon.MakeLine;
 DEFINE ST_MakePoint edu.umn.cs.pigeon.MakePoint;
 DEFINE ST_MakePolygon edu.umn.cs.pigeon.MakePolygon;
