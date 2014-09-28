@@ -21,6 +21,7 @@ import org.apache.pig.data.DataBag;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
+import com.esri.core.geometry.GeometryException;
 import com.esri.core.geometry.Line;
 import com.esri.core.geometry.MultiPath;
 import com.esri.core.geometry.Point;
@@ -90,7 +91,12 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
     OGCGeometry linestring = is_polygon?
         new OGCPolygon((Polygon)multi_path, 0, SpatialReference.create(4326)) :
         new OGCLineString(multi_path, 0, SpatialReference.create(4326));
-    return new DataByteArray(linestring.asBinary().array());
+    try {
+      return new DataByteArray(linestring.asBinary().array());
+    } catch (GeometryException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 
 }

@@ -49,7 +49,7 @@ public class Size extends EvalFunc<Integer> {
       } else if (geom instanceof OGCPolygon) {
         OGCPolygon poly = (OGCPolygon) geom;
         int size = 0;
-        size += poly.exterorRing().numPoints();
+        size += poly.exteriorRing().numPoints();
         for (int i = 0; i < poly.numInteriorRing(); i++) {
           size += poly.interiorRingN(i).numPoints();
         }
