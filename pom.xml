@@ -58,6 +58,13 @@
 		  <artifactId>esri-geometry-api</artifactId>
 		  <version>1.2</version>
 		</dependency>
+		
+		<dependency>
+      <groupId>com.vividsolutions</groupId>
+      <artifactId>jts</artifactId>
+      <version>1.8</version>
+    </dependency>
+    		
 
   </dependencies>
 </project>

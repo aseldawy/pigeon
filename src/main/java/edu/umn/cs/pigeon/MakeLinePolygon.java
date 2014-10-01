@@ -1,16 +1,9 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the
- * NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF
- * licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is
- * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and limitations under the License.
- */
-
+/*******************************************************************
+ * Copyright (C) 2014 by Regents of the University of Minnesota.   *
+ *                                                                 *
+ * This Software is released under the Apache License, Version 2.0 *
+ * http://www.apache.org/licenses/LICENSE-2.0                      *
+ *******************************************************************/
 package edu.umn.cs.pigeon;
 
 import java.io.IOException;
@@ -40,7 +33,7 @@ import com.esri.core.geometry.ogc.OGCPolygon;
  */
 public class MakeLinePolygon extends EvalFunc<DataByteArray>{
   
-  private GeometryParser geometryParser = new GeometryParser();
+  private ESRIGeometryParser geometryParser = new ESRIGeometryParser();
 
   @Override
   public DataByteArray exec(Tuple b) throws IOException {
@@ -53,6 +46,9 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
     boolean is_polygon = false;
     for (Tuple t : pointLocations) {
       Object point_id_obj = iter_id.next().get(0);
+      System.out.print(point_id_obj);
+      System.out.print(",");
+      System.out.println(t.get(0));
       long point_id = point_id_obj instanceof Integer?
           (Integer) point_id_obj :
           (Long) point_id_obj;
@@ -72,6 +68,7 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
             (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
       }
     }
+    System.out.println("Is Polygon? "+is_polygon);
     if (is_polygon && coordinates.length <= 3) {
       // Cannot create a polygon with two corners, convert to Linestring
       Point[] new_coords = new Point[coordinates.length - 1];
@@ -91,7 +88,15 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
     OGCGeometry linestring = is_polygon?
         new OGCPolygon((Polygon)multi_path, 0, SpatialReference.create(4326)) :
         new OGCLineString(multi_path, 0, SpatialReference.create(4326));
+    if (linestring instanceof OGCPolygon) {
+      OGCPolygon p = (OGCPolygon) linestring;
+      System.out.println("Simple "+p.isSimple());
+      System.out.println("point count "+((Polygon)p.getEsriGeometry()).getPointCount());
+      System.out.println("polygon count "+((Polygon)p.getEsriGeometry()).getPathCount());
+    }
     try {
+      System.out.println(linestring.asText());
+      System.out.println(linestring.asText());
       return new DataByteArray(linestring.asBinary().array());
     } catch (GeometryException e) {
       e.printStackTrace();
