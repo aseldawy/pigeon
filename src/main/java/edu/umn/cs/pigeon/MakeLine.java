@@ -16,7 +16,6 @@ import org.apache.pig.data.Tuple;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBWriter;
 
 /**
@@ -35,12 +34,8 @@ public class MakeLine extends EvalFunc<DataByteArray>{
     Coordinate[] coordinates = new Coordinate[(int) points.size()];
     int i = 0;
     for (Tuple t : points) {
-      try {
-        Geometry point = geometryParser.parseGeom(t.get(0));
-        coordinates[i++] = point.getCoordinate();
-      } catch (ParseException e) {
-        throw new IOException("Error parsing "+t.get(0), e);
-      }
+      Geometry point = geometryParser.parseGeom(t.get(0));
+      coordinates[i++] = point.getCoordinate();
     }
     Geometry line = geometryFactory.createLineString(coordinates);
     return new DataByteArray(wkbWriter.write(line));

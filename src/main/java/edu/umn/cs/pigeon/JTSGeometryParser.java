@@ -33,7 +33,7 @@ public class JTSGeometryParser {
   private final WKTReader wkt_reader = new WKTReader();
   private final WKBReader wkb_reader = new WKBReader();
   
-  public Geometry parseGeom(Object o) throws ParseException {
+  public Geometry parseGeom(Object o) {
     Geometry geom = null;
     if (o instanceof DataByteArray) {
       byte[] bytes = ((DataByteArray) o).get();
@@ -61,7 +61,11 @@ public class JTSGeometryParser {
         }
         if (isHex) {
           byte[] binary = WKBReader.hexToBytes(hex);
-          geom = wkb_reader.read(binary);
+          try {
+            geom = wkb_reader.read(binary);
+          } catch (ParseException e1) {
+            return null;
+          }
         }
       }
     }

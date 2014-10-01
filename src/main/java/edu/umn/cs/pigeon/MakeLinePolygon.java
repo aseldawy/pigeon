@@ -14,17 +14,10 @@ import org.apache.pig.data.DataBag;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.esri.core.geometry.GeometryException;
-import com.esri.core.geometry.Line;
-import com.esri.core.geometry.MultiPath;
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.Polygon;
-import com.esri.core.geometry.Polyline;
-import com.esri.core.geometry.Segment;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCLineString;
-import com.esri.core.geometry.ogc.OGCPolygon;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.WKBWriter;
 
 /**
  * Takes a list of point locations and IDs and creates either a linestring or
@@ -33,75 +26,52 @@ import com.esri.core.geometry.ogc.OGCPolygon;
  */
 public class MakeLinePolygon extends EvalFunc<DataByteArray>{
   
-  private ESRIGeometryParser geometryParser = new ESRIGeometryParser();
+  private GeometryFactory geometryFactory = new GeometryFactory();
+  private JTSGeometryParser geometryParser = new JTSGeometryParser();
+  private WKBWriter wkbWriter = new WKBWriter();
 
   @Override
   public DataByteArray exec(Tuple b) throws IOException {
     DataBag pointIDs = (DataBag) b.get(0);
     DataBag pointLocations = (DataBag) b.get(1);
-    Point[] coordinates = new Point[(int) pointLocations.size()];
+    Coordinate[] coordinates = new Coordinate[(int) pointLocations.size()];
     int i = 0;
     Iterator<Tuple> iter_id = pointIDs.iterator();
     long first_point_id = -1;
     boolean is_polygon = false;
     for (Tuple t : pointLocations) {
       Object point_id_obj = iter_id.next().get(0);
-      System.out.print(point_id_obj);
-      System.out.print(",");
-      System.out.println(t.get(0));
+      Geometry point = geometryParser.parseGeom(t.get(0));
       long point_id = point_id_obj instanceof Integer?
           (Integer) point_id_obj :
           (Long) point_id_obj;
       if (i == 0) {
         first_point_id = point_id;
-        coordinates[i++] =
-            (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
+        coordinates[i++] = point.getCoordinate();
       } else if (i == pointIDs.size() - 1) {
         is_polygon = point_id == first_point_id;
         if (is_polygon)
           coordinates[i++] = coordinates[0];
         else
-          coordinates[i++] =
-            (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
+          coordinates[i++] = point.getCoordinate();
       } else {
-        coordinates[i++] =
-            (Point) (geometryParser.parseGeom(t.get(0))).getEsriGeometry();
+        coordinates[i++] = point.getCoordinate();
       }
     }
-    System.out.println("Is Polygon? "+is_polygon);
     if (is_polygon && coordinates.length <= 3) {
       // Cannot create a polygon with two corners, convert to Linestring
-      Point[] new_coords = new Point[coordinates.length - 1];
+      Coordinate[] new_coords = new Coordinate[coordinates.length - 1];
       System.arraycopy(coordinates, 0, new_coords, 0, new_coords.length);
       coordinates = new_coords;
       is_polygon = false;
     }
-    MultiPath multi_path = is_polygon ? new Polygon() : new Polyline();
-    // Iterate over all segments. Skip last segment for polygons because
-    // it's redundant with first point
-    for (i = 1; i < (is_polygon? coordinates.length - 1 : coordinates.length); i++) {
-      Segment segment = new Line();
-      segment.setStart(coordinates[i-1]);
-      segment.setEnd(coordinates[i]);
-      multi_path.addSegment(segment, false);
+    Geometry shape;
+    if  (is_polygon) {
+      shape = geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+    } else {
+      shape = geometryFactory.createLineString(coordinates);
     }
-    OGCGeometry linestring = is_polygon?
-        new OGCPolygon((Polygon)multi_path, 0, SpatialReference.create(4326)) :
-        new OGCLineString(multi_path, 0, SpatialReference.create(4326));
-    if (linestring instanceof OGCPolygon) {
-      OGCPolygon p = (OGCPolygon) linestring;
-      System.out.println("Simple "+p.isSimple());
-      System.out.println("point count "+((Polygon)p.getEsriGeometry()).getPointCount());
-      System.out.println("polygon count "+((Polygon)p.getEsriGeometry()).getPathCount());
-    }
-    try {
-      System.out.println(linestring.asText());
-      System.out.println(linestring.asText());
-      return new DataByteArray(linestring.asBinary().array());
-    } catch (GeometryException e) {
-      e.printStackTrace();
-      return null;
-    }
+    return new DataByteArray(wkbWriter.write(shape));
   }
 
 }
