@@ -58,20 +58,24 @@ public class MakeLinePolygon extends EvalFunc<DataByteArray>{
         coordinates[i++] = point.getCoordinate();
       }
     }
-    if (is_polygon && coordinates.length <= 3) {
-      // Cannot create a polygon with two corners, convert to Linestring
-      Coordinate[] new_coords = new Coordinate[coordinates.length - 1];
-      System.arraycopy(coordinates, 0, new_coords, 0, new_coords.length);
-      coordinates = new_coords;
-      is_polygon = false;
-    }
     Geometry shape;
-    if  (is_polygon) {
-      shape = geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+    if (coordinates.length == 1 || (coordinates.length == 2 && is_polygon)) {
+      // A point
+      shape = geometryFactory.createPoint(coordinates[0]);
     } else {
-      shape = geometryFactory.createLineString(coordinates);
+      if (is_polygon && coordinates.length <= 3) {
+        // Cannot create a polygon with two corners, convert to Linestring
+        Coordinate[] new_coords = new Coordinate[coordinates.length - 1];
+        System.arraycopy(coordinates, 0, new_coords, 0, new_coords.length);
+        coordinates = new_coords;
+        is_polygon = false;
+      }
+      if  (is_polygon) {
+        shape = geometryFactory.createPolygon(geometryFactory.createLinearRing(coordinates), null);
+      } else {
+        shape = geometryFactory.createLineString(coordinates);
+      }
     }
     return new DataByteArray(wkbWriter.write(shape));
   }
-
 }
