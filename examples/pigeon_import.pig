@@ -1,6 +1,7 @@
 DEFINE ST_Area edu.umn.cs.pigeon.Area;
 DEFINE ST_AsHex edu.umn.cs.pigeon.AsHex;
 DEFINE ST_AsText edu.umn.cs.pigeon.AsText;
+DEFINE ST_Break edu.umn.cs.pigeon.Break;
 DEFINE ST_Buffer edu.umn.cs.pigeon.Buffer;
 DEFINE ST_Connect edu.umn.cs.pigeon.Connect;
 DEFINE ST_Contains edu.umn.cs.pigeon.Contains;
@@ -16,6 +17,7 @@ DEFINE ST_MakeLine edu.umn.cs.pigeon.MakeLine;
 DEFINE ST_MakePoint edu.umn.cs.pigeon.MakePoint;
 DEFINE ST_MakePolygon edu.umn.cs.pigeon.MakePolygon;
 DEFINE ST_MakeLinePolygon edu.umn.cs.pigeon.MakeLinePolygon;
+DEFINE ST_MakeSegments edu.umn.cs.pigeon.MakeSegments;
 DEFINE ST_MakeBox edu.umn.cs.pigeon.MakeBox;
 DEFINE ST_Overlaps edu.umn.cs.pigeon.Overlaps;
 DEFINE ST_Size edu.umn.cs.pigeon.Size;
