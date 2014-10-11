@@ -4,7 +4,7 @@
   <groupId>edu.umn.cs.spatialHadoop</groupId>
   <artifactId>pigeon</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.0-rc1</version>
   <name>pigeon</name>
   <url>http://maven.apache.org</url>
   
@@ -58,6 +58,13 @@
 		  <artifactId>esri-geometry-api</artifactId>
 		  <version>1.2</version>
 		</dependency>
+		
+		<dependency>
+      <groupId>com.vividsolutions</groupId>
+      <artifactId>jts</artifactId>
+      <version>1.8</version>
+    </dependency>
+    		
 
   </dependencies>
 </project>

@@ -1,53 +1,61 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the
- * NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF
- * licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is
- * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and limitations under the License.
- */
+/*******************************************************************
+ * Copyright (C) 2014 by Regents of the University of Minnesota.   *
+ *                                                                 *
+ * This Software is released under the Apache License, Version 2.0 *
+ * http://www.apache.org/licenses/LICENSE-2.0                      *
+ *******************************************************************/
 
 package edu.umn.cs.pigeon;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Vector;
 
 import junit.framework.TestCase;
 
-import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
-import org.apache.pig.data.Tuple;
 import org.junit.Test;
+
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
 public class TestHelper extends TestCase {
   @Test
   public void testTest() {
     assertTrue(true);
   }
+  
+  public static void assertGeometryEqual(Object expected, Object test) {
+    OGCGeometry expected_geom = expected instanceof String?
+        OGCGeometry.fromText((String)expected) :
+        OGCGeometry.fromBinary(ByteBuffer.wrap(((DataByteArray)expected).get()));
+    OGCGeometry test_geom = test instanceof String?
+        OGCGeometry.fromText((String)test) :
+        OGCGeometry.fromBinary(ByteBuffer.wrap(((DataByteArray)test).get()));
+    if (expected_geom instanceof OGCGeometryCollection &&
+        test_geom instanceof OGCGeometryCollection) {
+      OGCGeometryCollection expected_coln = (OGCGeometryCollection) expected_geom;
+      OGCGeometryCollection test_coln = (OGCGeometryCollection) test_geom;
+      assertEquals(expected_coln.numGeometries(), test_coln.numGeometries());
+      Vector<OGCGeometry> expectedGeometries = new Vector<OGCGeometry>();
+      for (int i = 0; i < expected_coln.numGeometries(); i++) {
+        expectedGeometries.add(expected_coln.geometryN(i));
+      }
+      for (int i = 0; i < test_coln.numGeometries(); i++) {
+        OGCGeometry geom = test_coln.geometryN(i);
+        int j = 0;
+        while (j < expectedGeometries.size() && !geom.equals(expectedGeometries.get(j)))
+          j++;
 
-  public static ArrayList<DataByteArray[]> getExpected(
-      ArrayList<String[]> data, Pattern pattern) {
-    ArrayList<DataByteArray[]> expected = new ArrayList<DataByteArray[]>();
-    for (int i = 0; i < data.size(); i++) {
-      String string = data.get(i)[0];
-      Matcher matcher = pattern.matcher(string);
-      matcher.groupCount();
-      matcher.find();
-      DataByteArray[] toAdd = new DataByteArray[] {
-          new DataByteArray(matcher.group(1)),
-          new DataByteArray(matcher.group(2)),
-          new DataByteArray(matcher.group(3)) };
-      expected.add(toAdd);
+        assertTrue(j < expectedGeometries.size());
+        expectedGeometries.remove(j++);
+      }
+    } else {
+      assertTrue("Exepcted geometry to be '"+expected+"' but found '"+test+"'",
+          expected_geom.equals(test_geom));
     }
-
-    return expected;
   }
 
   private static String join(String delimiter, String[] strings) {
@@ -56,22 +64,6 @@ public class TestHelper extends TestCase {
       string += delimiter + strings[i].toString();
     }
     return string;
-  }
-
-  public static void examineTuple(ArrayList<DataByteArray[]> expectedData,
-      Tuple tuple, int tupleCount) {
-    for (int i = 0; i < tuple.size(); i++) {
-      DataByteArray dataAtom = null;
-      try {
-        dataAtom = (DataByteArray) tuple.get(i);
-      } catch (ExecException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-      DataByteArray expected = expectedData.get(tupleCount)[i];
-      System.err.println("compare " + expected + " to " + dataAtom);
-      assertEquals(expected, dataAtom);
-    }
   }
 
   public static String createTempFile(ArrayList<String[]> myData,
