@@ -15,7 +15,7 @@ package edu.umn.cs.pigeon;
 
 import java.io.IOException;
 
-import org.apache.pig.EvalFunc;
+import org.apache.pig.FilterFunc;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 
@@ -29,7 +29,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
  * @author Ahmed Eldawy
  *
  */
-public class Crosses extends EvalFunc<Boolean> {
+public class Crosses extends FilterFunc {
   
   private final GeometryParser geometryParser = new GeometryParser();
 

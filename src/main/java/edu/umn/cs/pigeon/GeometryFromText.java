@@ -18,20 +18,13 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCPoint;
 import com.esri.core.geometry.ogc.OGCGeometry;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 /**
  * @author Tuan Pham
  *
  */
 public class GeometryFromText extends EvalFunc<DataByteArray> {
-    private static final Logger logger = LoggerFactory.getLogger(GeometryFromWKB.class);
     
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
