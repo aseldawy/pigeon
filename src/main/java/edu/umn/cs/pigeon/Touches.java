@@ -8,7 +8,7 @@ package edu.umn.cs.pigeon;
 
 import java.io.IOException;
 
-import org.apache.pig.EvalFunc;
+import org.apache.pig.FilterFunc;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 
@@ -20,7 +20,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
  * @author Tuan Pham
  *
  */
-public class Touches extends EvalFunc<Boolean> {
+public class Touches extends FilterFunc {
   
   private final ESRIGeometryParser geometryParser = new ESRIGeometryParser();
 
