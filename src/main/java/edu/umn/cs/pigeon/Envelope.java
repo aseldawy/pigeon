@@ -13,7 +13,8 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.WKBWriter;
 
 
 /**
@@ -23,14 +24,16 @@ import com.esri.core.geometry.ogc.OGCGeometry;
  */
 public class Envelope extends EvalFunc<DataByteArray> {
   
-  private final ESRIGeometryParser geometryParser = new ESRIGeometryParser();
+  private final WKBWriter WKB_WRITER = new WKBWriter();
+  private final JTSGeometryParser GEOMETRY_PARSER = new JTSGeometryParser();
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
     try {
       Object v = input.get(0);
-      OGCGeometry geom = geometryParser.parseGeom(v);
-      return new DataByteArray(geom.envelope().asBinary().array());
+      Geometry geom = GEOMETRY_PARSER.parseGeom(v);
+      Geometry envelope = geom.getEnvelope();
+      return new DataByteArray(WKB_WRITER.write(envelope));
     } catch (ExecException ee) {
       throw ee;
     }
