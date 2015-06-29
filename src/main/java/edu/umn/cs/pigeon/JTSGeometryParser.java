@@ -6,6 +6,7 @@
  *******************************************************************/
 package edu.umn.cs.pigeon;
 
+import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -33,13 +34,12 @@ public class JTSGeometryParser {
   private final WKTReader wkt_reader = new WKTReader();
   private final WKBReader wkb_reader = new WKBReader();
   
-  public Geometry parseGeom(Object o) {
-    Geometry geom = null;
+  public Geometry parseGeom(Object o) throws ExecException {
     if (o instanceof DataByteArray) {
       byte[] bytes = ((DataByteArray) o).get();
       try {
         // Parse data as well known binary (WKB)
-        geom = wkb_reader.read(bytes);
+        return wkb_reader.read(bytes);
       } catch (ParseException e) {
         // Convert bytes to text and try text parser
         o = new String(bytes);
@@ -48,7 +48,7 @@ public class JTSGeometryParser {
     if (o instanceof String) {
       try {
         // Parse string as well known text (WKT)
-        geom = wkt_reader.read((String) o);
+        return wkt_reader.read((String) o);
       } catch (ParseException e) {
         // Parse string as a hex string of a well known binary (WKB)
         String hex = (String) o;
@@ -62,14 +62,14 @@ public class JTSGeometryParser {
         if (isHex) {
           byte[] binary = WKBReader.hexToBytes(hex);
           try {
-            geom = wkb_reader.read(binary);
+            return wkb_reader.read(binary);
           } catch (ParseException e1) {
-            return null;
+            throw new ExecException("Error parsing '"+o+"'", e);
           }
         }
       }
     }
-    return geom;
+    throw new ExecException("Error parsing unknown type '"+o+"'");
   }
   
   public static double parseDouble(Object o) {
