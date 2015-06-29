@@ -11,6 +11,7 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
+import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
@@ -83,13 +84,23 @@ public class TestGeometryParser extends TestCase {
     assertTrue(polygon.equals(parsed));
   }
 
-  public void testShouldReturnNullOnGarbageText() throws Exception {
-    OGCGeometry parsed = geometry_parser.parseGeom("asdfasdf");
-    assertNull(parsed);
+  public void testShouldThrowAnExceptionOnGarbageText() throws Exception {
+    boolean exceptionThrown = false;
+    try {
+      geometry_parser.parseGeom("asdfasdf");
+    } catch (ExecException e) {
+      exceptionThrown = true;
+    }
+    assertTrue(exceptionThrown);
   }
 
-  public void testShouldReturnNullOnGarbageBinary() throws Exception {
-    OGCGeometry parsed = geometry_parser.parseGeom(new DataByteArray(new byte[] {0, 1, 2, 3}));
-    assertNull(parsed);
+  public void testShouldThrowAnExceptionOnGarbageBinary() throws Exception {
+    boolean exceptionThrown = false;
+    try {
+      geometry_parser.parseGeom(new DataByteArray(new byte[] {0, 1, 2, 3}));
+    } catch (ExecException e) {
+      exceptionThrown = true;
+    }
+    assertTrue(exceptionThrown);
   }
 }
