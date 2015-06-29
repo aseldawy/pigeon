@@ -8,6 +8,7 @@ package edu.umn.cs.pigeon;
 
 import java.nio.ByteBuffer;
 
+import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
@@ -29,13 +30,12 @@ import com.esri.core.geometry.ogc.OGCGeometry;
  */
 public class ESRIGeometryParser {
   
-  public OGCGeometry parseGeom(Object o) {
-    OGCGeometry geom = null;
+  public OGCGeometry parseGeom(Object o) throws ExecException {
     if (o instanceof DataByteArray) {
       try {
         // Parse data as well known binary (WKB)
         byte[] bytes = ((DataByteArray) o).get();
-        geom = OGCGeometry.fromBinary(ByteBuffer.wrap(bytes));
+        return OGCGeometry.fromBinary(ByteBuffer.wrap(bytes));
       } catch (RuntimeException e) {
         // Treat it as an encoded string (WKT)
         o = new String(((DataByteArray) o).get());
@@ -44,18 +44,19 @@ public class ESRIGeometryParser {
     if (o instanceof String) {
       try {
         // Parse string as well known text (WKT)
-        geom = OGCGeometry.fromText((String) o);
+        return OGCGeometry.fromText((String) o);
       } catch (IllegalArgumentException e) {
         try {
           // Error parsing from WKT, try hex string instead
           byte[] binary = hexToBytes((String) o);
-          geom = OGCGeometry.fromBinary(ByteBuffer.wrap(binary));
+          return OGCGeometry.fromBinary(ByteBuffer.wrap(binary));
         } catch (RuntimeException e1) {
-          // Cannot parse text. Just return null
+          // Cannot parse text.
+          throw new ExecException("Cannot parse '"+o+"'", e);
         }
       }
     }
-    return geom;
+    throw new ExecException("Cannot parse unknown type '"+o+"'");
   }
   
   public static double parseDouble(Object o) {

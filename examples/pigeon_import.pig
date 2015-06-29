@@ -20,7 +20,7 @@ DEFINE ST_MakeLinePolygon edu.umn.cs.pigeon.MakeLinePolygon;
 DEFINE ST_MakeSegments edu.umn.cs.pigeon.MakeSegments;
 DEFINE ST_MakeBox edu.umn.cs.pigeon.MakeBox;
 DEFINE ST_Overlaps edu.umn.cs.pigeon.Overlaps;
-DEFINE ST_Size edu.umn.cs.pigeon.Size;
+DEFINE ST_NumPoints edu.umn.cs.pigeon.NumPoints;
 DEFINE ST_Union edu.umn.cs.pigeon.Union;
 DEFINE ST_Intersects edu.umn.cs.pigeon.Intersects;
 DEFINE ST_Within edu.umn.cs.pigeon.Within;
