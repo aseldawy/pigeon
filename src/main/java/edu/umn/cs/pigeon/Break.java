@@ -26,7 +26,10 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
 /**
- * Generates a geometry of type LineString out of a bag of points.
+ * Breaks down a linestring or a polygon into straight line segments.
+ * The generated segments are returned as a bag of tuples with the common
+ * schema (Segment_ID, x1, y1, x2, y2)
+ * 
  * @author Ahmed Eldawy
  */
 public class Break extends EvalFunc<DataBag>{

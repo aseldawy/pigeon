@@ -73,36 +73,51 @@ Basic Spatial Functions
 
 + *ST_AsHex* Converts a shape to its Well-Known Binary (WKB) format encoded as Hex string
 + *ST_AsText* Converts a shape to its Well-Known Text (WKT) format
++ *ST_GeomFromText* Parses a WKT representation into an object
++ *ST_GeomFromWKT* Parses an object from a hex-encoded WKB representation
 + *ST_MakePoint* Creates a geometry point given two numeric coordinates
++ *ST_MakeBox* Creates a rectangle from its four coordinates (x1, y1, x2, y2)
 + *ST_Area* Calculates the area of a surface shape (e.g., Polygon)
 + *ST_Envelope* Calculates the envelope (MBR) of a shape
 + *ST_Buffer* Computes a buffer with the specified distance around a geometry.
-+ *ST_Size* Returns number of points in a linestring
++ *ST_NumPoints* Returns number of points in a linestring
++ *ST_XMin* Returns the minimum x-coordinate of an object
++ *ST_YMin* Returns the minimum y-coordinate of an object
++ *ST_XMax* Returns the maximum x-coordinate of an object
++ *ST_YMax* Returns the maximum y-coordinate of an object
+
 
 Spatial Predicates
 ------------------
 
 + *ST_Crosses* Checks if one polygon crosses another polygon
 + *ST_IsEmpty* Tests whether a shape is empty or not.
-
++ *ST_Contains* Tests for containment between two geometries
++ *ST_Intersects* Tests if two objects intersect
++ *ST_Overlaps* Tests if two objects overlap
++ *ST_Touches* Tests if two objects touch
++ *ST_Within* Tests if one geometry is withing another geometry
 
 Spatial Analysis
 ----------------
 
 + *ST_Buffer* Computes a buffer with the specified distance around a geometry.
 + *ST_ConvexHull* Computes the minimal convex polygon of a shape.
-
-
++ *ST_Break* Breaks a geometry into straight line segments
++ *ST_Difference* Calculates the difference between two polygons.
++ *ST_Intersection* Computes the intersection betwen two polygons.
++ *ST_MakeSegments* Creates a set of line segments given a set of points by connecting each two consecutive points
 
 Aggregate functions
 -------------------
 
 + *ST_MakeLine* Creates a line string given a bag of points
 + *ST_MakePolygon* Creates a polygon given a circular list of points
++ *ST_MakeLinePolygon* Creates a line or polygons from a list of points depending on whether the last point is the same as the first point or not
 + *ST_ConvexHull* Computes the convex hull from a bag of shapes
 + *ST_Union* Computes the spatial union of a set of surfaces (e.g., Polygons)
 + *ST_Extent* Computes the minimal bounding rectangle (MBR) of a set of shapes
-
++ *ST_Connect* Connects a set of linestrings together to form longer linestring or polygons
 
 Contribution
 ============
