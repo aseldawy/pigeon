@@ -42,7 +42,7 @@ public class NumPoints extends EvalFunc<Integer> {
     }
   }
   
-  private int getGeometrySize(Geometry geom) throws ExecException {
+  protected static int getGeometrySize(Geometry geom) throws ExecException {
     if (geom instanceof Point) {
       return 1;
     } else if (geom instanceof LineString) {
