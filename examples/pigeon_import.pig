@@ -7,6 +7,7 @@ DEFINE ST_Connect edu.umn.cs.pigeon.Connect;
 DEFINE ST_Contains edu.umn.cs.pigeon.Contains;
 DEFINE ST_ConvexHull edu.umn.cs.pigeon.ConvexHull;
 DEFINE ST_Crosses edu.umn.cs.pigeon.Crosses;
+DEFINE ST_Decompose edu.umn.cs.pigeon.Decompose;
 DEFINE ST_Difference edu.umn.cs.pigeon.Difference;
 DEFINE ST_Envelope edu.umn.cs.pigeon.Envelope;
 DEFINE ST_Extent edu.umn.cs.pigeon.Extent;
