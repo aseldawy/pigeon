@@ -31,7 +31,7 @@ public class XMin extends EvalFunc<Double> {
       Object v = input.get(0);
       Geometry geom = geometryParser.parseGeom(v);
       Coordinate[] coords = geom.getEnvelope().getCoordinates();
-      return Math.min(coords[0].x, Math.min(coords[1].x, coords[2].x));
+      return Math.min(coords[0].x, coords[2].x);
     } catch (ExecException ee) {
       throw ee;
     }

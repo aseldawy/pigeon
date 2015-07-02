@@ -31,7 +31,7 @@ public class YMax extends EvalFunc<Double> {
       Object v = input.get(0);
       Geometry geom = geometryParser.parseGeom(v);
       Coordinate[] coords = geom.getEnvelope().getCoordinates();
-      return Math.max(coords[0].y, Math.max(coords[1].y, coords[2].y));
+      return Math.max(coords[0].y, coords[2].y);
     } catch (ExecException ee) {
       throw ee;
     }
