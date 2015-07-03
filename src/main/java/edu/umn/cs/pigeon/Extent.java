@@ -9,7 +9,6 @@ package edu.umn.cs.pigeon;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.apache.pig.Accumulator;
 import org.apache.pig.Algebraic;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.backend.executionengine.ExecException;
@@ -27,8 +26,7 @@ import com.esri.core.geometry.ogc.OGCGeometryCollection;
  * @author Ahmed Eldawy
  *
  */
-public class Extent extends EvalFunc<DataByteArray> implements Algebraic,
-    Accumulator<DataByteArray> {
+public class Extent extends EvalFunc<DataByteArray> implements Algebraic {
   
   private static final ESRIGeometryParser geometryParser = new ESRIGeometryParser();
 
@@ -85,31 +83,4 @@ public class Extent extends EvalFunc<DataByteArray> implements Algebraic,
     return geom_collection.envelope();
   }
 
-  OGCGeometry partialMbr;
-  ESRIGeometryParser geomParser = new ESRIGeometryParser();
-  
-  @Override
-  public void accumulate(Tuple b) throws IOException {
-    // Union all passed elements along with the union we might currently have
-    DataBag bag = (DataBag) b.get(0);
-    ArrayList<OGCGeometry> all_geoms = new ArrayList<OGCGeometry>();
-    if (partialMbr != null)
-      all_geoms.add(partialMbr);
-    for (Tuple t : bag) {
-      OGCGeometry geom = geomParser.parseGeom(t.get(0));
-      all_geoms.add(geom);
-    }
-    partialMbr = new OGCConcreteGeometryCollection(all_geoms, all_geoms
-        .get(0).getEsriSpatialReference()).envelope();
-  }
-
-  @Override
-  public DataByteArray getValue() {
-    return new DataByteArray(partialMbr.asBinary().array());
-  }
-
-  @Override
-  public void cleanup() {
-    partialMbr = null;
-  }
 }

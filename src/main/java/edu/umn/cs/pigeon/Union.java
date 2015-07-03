@@ -9,7 +9,6 @@ package edu.umn.cs.pigeon;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.apache.pig.Accumulator;
 import org.apache.pig.Algebraic;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.backend.executionengine.ExecException;
@@ -29,8 +28,7 @@ import com.esri.core.geometry.ogc.OGCGeometryCollection;
  * @author Ahmed Eldawy
  *
  */
-public class Union extends EvalFunc<DataByteArray> implements Algebraic,
-    Accumulator<DataByteArray> {
+public class Union extends EvalFunc<DataByteArray> implements Algebraic {
   
   private static final ESRIGeometryParser geometryParser = new ESRIGeometryParser();
 
@@ -87,31 +85,4 @@ public class Union extends EvalFunc<DataByteArray> implements Algebraic,
     return geom_collection.union(all_geoms.get(0));
   }
 
-  OGCGeometry partialUnion;
-  ESRIGeometryParser geomParser = new ESRIGeometryParser();
-  
-  @Override
-  public void accumulate(Tuple b) throws IOException {
-    // Union all passed elements along with the union we might currently have
-    DataBag bag = (DataBag) b.get(0);
-    ArrayList<OGCGeometry> all_geoms = new ArrayList<OGCGeometry>();
-    if (partialUnion != null)
-      all_geoms.add(partialUnion);
-    for (Tuple t : bag) {
-      OGCGeometry geom = geomParser.parseGeom(t.get(0));
-      all_geoms.add(geom);
-    }
-    partialUnion = new OGCConcreteGeometryCollection(all_geoms, all_geoms
-        .get(0).getEsriSpatialReference()).union(all_geoms.get(0));
-  }
-
-  @Override
-  public DataByteArray getValue() {
-    return new DataByteArray(partialUnion.asBinary().array());
-  }
-
-  @Override
-  public void cleanup() {
-    partialUnion = null;
-  }
 }
