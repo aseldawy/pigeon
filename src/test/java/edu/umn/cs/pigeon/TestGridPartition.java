@@ -24,7 +24,7 @@ import org.apache.pig.data.Tuple;
  * @author Ahmed Eldawy
  *
  */
-public class TestGirdPartition extends TestCase {
+public class TestGridPartition extends TestCase {
   
   public void testShouldWorkWithWKT() throws Exception {
     // Create polygons
