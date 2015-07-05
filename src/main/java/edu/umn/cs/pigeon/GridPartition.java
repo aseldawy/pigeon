@@ -32,22 +32,30 @@ public class GridPartition extends EvalFunc<DataBag> {
   @Override
   public DataBag exec(Tuple b) throws IOException {
     Geometry geomMBR = geometryParser.parseGeom(b.get(0)).getEnvelope();
-    Geometry gridMBR = geometryParser.parseGeom(b.get(1));
+    Geometry gridMBR = geometryParser.parseGeom(b.get(1)).getEnvelope();
     int gridSize = (Integer)b.get(2);
 
     DataBag output = BagFactory.getInstance().newDefaultBag();
-    
-    Coordinate[] geomCoords = geomMBR.getCoordinates();
-    double geomX1 = Math.min(geomCoords[0].x, geomCoords[2].x);
-    double geomY1 = Math.min(geomCoords[0].y, geomCoords[2].y);
-    double geomX2 = Math.max(geomCoords[0].x, geomCoords[2].x);
-    double geomY2 = Math.max(geomCoords[0].y, geomCoords[2].y);
 
     Coordinate[] gridCoords = gridMBR.getCoordinates();
     double gridX1 = Math.min(gridCoords[0].x, gridCoords[2].x);
     double gridY1 = Math.min(gridCoords[0].y, gridCoords[2].y);
     double gridX2 = Math.max(gridCoords[0].x, gridCoords[2].x);
     double gridY2 = Math.max(gridCoords[0].y, gridCoords[2].y);
+
+    Coordinate[] geomCoords = geomMBR.getCoordinates();
+    double geomX1, geomY1, geomX2, geomY2;
+    if (geomCoords.length == 1) {
+      // A special case for point
+      geomX1 = geomX2 = geomCoords[0].x;
+      geomY1 = geomY2 = geomCoords[0].y;
+    } else {
+      geomX1 = Math.min(geomCoords[0].x, geomCoords[2].x);
+      geomY1 = Math.min(geomCoords[0].y, geomCoords[2].y);
+      geomX2 = Math.max(geomCoords[0].x, geomCoords[2].x);
+      geomY2 = Math.max(geomCoords[0].y, geomCoords[2].y);
+    }
+
     
     int col1 = (int) (Math.floor(geomX1 - gridX1) * gridSize / (gridX2 - gridX1));
     int row1 = (int) (Math.floor(geomY1 - gridY1) * gridSize / (gridY2 - gridY1));
@@ -79,4 +87,5 @@ public class GridPartition extends EvalFunc<DataBag> {
     }
   }
 }
+
 
