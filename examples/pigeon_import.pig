@@ -1,6 +1,7 @@
 DEFINE ST_Area edu.umn.cs.pigeon.Area;
 DEFINE ST_AsHex edu.umn.cs.pigeon.AsHex;
 DEFINE ST_AsText edu.umn.cs.pigeon.AsText;
+DEFINE ST_Boundary edu.umn.cs.pigeon.Boundary;
 DEFINE ST_Break edu.umn.cs.pigeon.Break;
 DEFINE ST_Buffer edu.umn.cs.pigeon.Buffer;
 DEFINE ST_Connect edu.umn.cs.pigeon.Connect;
