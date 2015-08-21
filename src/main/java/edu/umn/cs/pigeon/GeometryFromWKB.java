@@ -27,7 +27,7 @@ public class GeometryFromWKB extends EvalFunc<DataByteArray> {
         throw new IOException("GeometryFromWKB takes one bytearray argument");
     
     ESRIGeometryParser gp = new ESRIGeometryParser();
-    OGCGeometry geom = gp.parseGeom(input.get(0).toString());
+    OGCGeometry geom = gp.parseGeom(input.get(0));
     return new DataByteArray(geom.asBinary().array()); 
   }
 }
