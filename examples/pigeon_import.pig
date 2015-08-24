@@ -31,3 +31,5 @@ DEFINE ST_XMin edu.umn.cs.pigeon.XMin;
 DEFINE ST_XMax edu.umn.cs.pigeon.XMax;
 DEFINE ST_YMin edu.umn.cs.pigeon.YMin;
 DEFINE ST_YMax edu.umn.cs.pigeon.YMax;
+DEFINE ST_ESRIFromWKB edu.umn.cs.pigeon.ESRIShapeFromWKB;
+DEFINE ST_ESRIFromText edu.umn.cs.pigeon.ESRIShapeFromText;
