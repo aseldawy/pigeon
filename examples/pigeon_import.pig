@@ -17,6 +17,7 @@ DEFINE ST_GeomFromText edu.umn.cs.pigeon.GeometryFromText;
 DEFINE ST_Intersection edu.umn.cs.pigeon.Intersection;
 DEFINE ST_Intersects edu.umn.cs.pigeon.Intersects;
 DEFINE ST_IsEmpty edu.umn.cs.pigeon.IsEmpty;
+DEFINE ST_IsValid edu.umn.cs.pigeon.IsValid;
 DEFINE ST_MakeBox edu.umn.cs.pigeon.MakeBox;
 DEFINE ST_MakeLine edu.umn.cs.pigeon.MakeLine;
 DEFINE ST_MakeLinePolygon edu.umn.cs.pigeon.MakeLinePolygon;

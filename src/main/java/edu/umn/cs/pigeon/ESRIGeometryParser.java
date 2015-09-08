@@ -31,6 +31,8 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 public class ESRIGeometryParser {
   
   public OGCGeometry parseGeom(Object o) throws ExecException {
+    if (o == null)
+      return null;
     if (o instanceof DataByteArray) {
       try {
         // Parse data as well known binary (WKB)

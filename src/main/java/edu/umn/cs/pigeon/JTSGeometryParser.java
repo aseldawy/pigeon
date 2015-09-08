@@ -35,6 +35,8 @@ public class JTSGeometryParser {
   private final WKBReader wkb_reader = new WKBReader();
   
   public Geometry parseGeom(Object o) throws ExecException {
+    if (o == null)
+      return null;
     if (o instanceof DataByteArray) {
       byte[] bytes = ((DataByteArray) o).get();
       try {

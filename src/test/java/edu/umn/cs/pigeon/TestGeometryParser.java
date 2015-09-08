@@ -103,4 +103,9 @@ public class TestGeometryParser extends TestCase {
     }
     assertTrue(exceptionThrown);
   }
+  
+  public void testShouldReturnNullOnNullInput() throws Exception {
+    OGCGeometry parsed = geometry_parser.parseGeom(null);
+    assertNull(parsed);
+  }
 }

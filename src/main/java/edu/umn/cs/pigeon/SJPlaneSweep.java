@@ -18,14 +18,26 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.BagFactory;
 import org.apache.pig.data.DataBag;
+import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
+import org.apache.pig.impl.logicalLayer.schema.Schema;
+import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
- * Performs a spatial join using the plane-sweep algorithm
+ * Performs a spatial join using the plane-sweep algorithm.
+ * General usage
+ * SJPlaneSweep(dataset1, dataset2, duplicate-avoidance-rectangle,
+ *   column-index1, column-index2)
+ * dataset1: The left dataset
+ * dataset2: The right dataset
+ * duplicate-avoidance-rectangle: The rectangle to use to perform duplicate
+ *   avoidance. If not set, no duplicate avoidance is carried out.
+ * column-index1: The index (position) of the geometric column in dataset1
+ * column-index2: The index (position) of the geometric column in dataset2
  * @author Ahmed Eldawy
  *
  */
@@ -42,15 +54,17 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
     boolean dupAvoidance = false;
     double mbrX1 = 0, mbrY1 = 0, mbrX2 = 0, mbrY2 = 0;
     if (input.size() > 2) {
-      dupAvoidance = true;
       // Implement duplicate avoidance based on the MBR as specified by
       // the third argument
       Geometry cellMBR = geomParser.parseGeom(input.get(2));
-      Coordinate[] mbrCoords = cellMBR.getCoordinates();
-      mbrX1 = Math.min(mbrCoords[0].x, mbrCoords[2].x);
-      mbrY1 = Math.min(mbrCoords[0].y, mbrCoords[2].y);
-      mbrX2 = Math.max(mbrCoords[0].x, mbrCoords[2].x);
-      mbrY2 = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+      if (cellMBR != null) {
+        dupAvoidance = true;
+        Coordinate[] mbrCoords = cellMBR.getCoordinates();
+        mbrX1 = Math.min(mbrCoords[0].x, mbrCoords[2].x);
+        mbrY1 = Math.min(mbrCoords[0].y, mbrCoords[2].y);
+        mbrX2 = Math.max(mbrCoords[0].x, mbrCoords[2].x);
+        mbrY2 = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+      }
     }
     // Retrieve the index of the geometry column in each bag
     // -1 indicates that it is not specified by user and will be auto-detected
@@ -137,12 +151,12 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
     DataBag output = BagFactory.getInstance().newDefaultBag();
     while (ri.hasNext()) {
       rTuples[rSize++] = tupleFactory.newTupleNoCopy(ri.next().getAll());
-      if (rSize == batchSize) {
+      if (rSize == batchSize || !ri.hasNext()) {
         // Extract MBRs of geometries on the right
         if (rGeomColumn == -1)
           rGeomColumn = detectGeomColumn(rTuples[0]);
         
-        for (int i = 0; i < rTuples.length; i++) {
+        for (int i = 0; i < rSize; i++) {
           Geometry geom = geomParser.parseGeom(rTuples[i].get(rGeomColumn));
           Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
           rx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
@@ -155,11 +169,11 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
         quickSort.sort(rSortable, 0, rSize);
         int i = 0, j = 0;
 
-        while (i < lTuples.length && j < rTuples.length) {
+        while (i < lTuples.length && j < rSize) {
           if (lx1[i] < rx1[j]) {
             int jj = j;
             // Compare left object i to all right object jj
-            while (jj < rTuples.length && rx1[jj] <= lx2[i]) {
+            while (jj < rSize && rx1[jj] <= lx2[i]) {
               if (lx2[i] > rx1[jj] && rx2[jj] > lx1[i] &&
                   ly2[i] > ry1[jj] && ry2[jj] > ly1[i]) {
                 boolean report = true;
@@ -174,9 +188,9 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
                   }
                 }
                 if (report) {
-                  Geometry lGeom = geomParser.parseGeom(lTuples[i].get(lGeomColumn));
-                  Geometry rGeom = geomParser.parseGeom(rTuples[jj].get(rGeomColumn));
-                  if (lGeom.overlaps(rGeom))
+//                  Geometry lGeom = geomParser.parseGeom(lTuples[i].get(lGeomColumn));
+//                  Geometry rGeom = geomParser.parseGeom(rTuples[jj].get(rGeomColumn));
+//                  if (lGeom.overlaps(rGeom))
                     addToAnswer(output, lTuples[i], rTuples[jj]);
                 }
               }
@@ -202,9 +216,9 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
                   }
                 }
                 if (report) {
-                  Geometry lGeom = geomParser.parseGeom(lTuples[ii].get(lGeomColumn));
-                  Geometry rGeom = geomParser.parseGeom(rTuples[j].get(rGeomColumn));
-                  if (lGeom.overlaps(rGeom))
+//                  Geometry lGeom = geomParser.parseGeom(lTuples[ii].get(lGeomColumn));
+//                  Geometry rGeom = geomParser.parseGeom(rTuples[j].get(rGeomColumn));
+//                  if (lGeom.overlaps(rGeom))
                     addToAnswer(output, lTuples[ii], rTuples[j]);
                 }
               }
@@ -224,7 +238,7 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
   private void addToAnswer(DataBag output, Tuple lTuple, Tuple rTuple) {
     List<Object> attrs = lTuple.getAll();
     attrs.addAll(rTuple.getAll());
-    Tuple outTuple = tupleFactory.newTuple(attrs.size());
+    Tuple outTuple = tupleFactory.newTuple(attrs);
     output.add(outTuple);
   }
 
@@ -240,4 +254,34 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
     }
     throw new ExecException("Cannot detect a geometry column in "+t);
   }
+  
+  public Schema outputSchema(Schema input) {
+    try {
+      // Column $0 is a bag of tuples that represent the left dataset
+      Schema leftSchema = input.getField(0).schema.getField(0).schema;
+      // Column $1 is a bag of tuples that represent the right dataset
+      Schema rightSchema = input.getField(1).schema.getField(0).schema;
+      
+      Schema tupleSchema = new Schema();
+      for (FieldSchema leftAttr : leftSchema.getFields()) {
+        leftAttr = leftAttr.clone();
+        leftAttr.alias = "left::"+leftAttr.alias;
+        tupleSchema.add(leftAttr);
+      }
+      for (FieldSchema rightAttr : rightSchema.getFields()) {
+        rightAttr = rightAttr.clone();
+        rightAttr.alias = "right::"+rightAttr.alias;
+        tupleSchema.add(rightAttr);
+        
+      }
+      
+      FieldSchema outSchema = new Schema.FieldSchema("result", tupleSchema);
+      outSchema.type = DataType.BAG;
+      
+      return new Schema(outSchema);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
 }
