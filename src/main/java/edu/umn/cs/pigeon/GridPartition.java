@@ -21,8 +21,13 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
- * Checks which grid cells overlap a geometric shape based on its MBR
- * 
+ * Checks which grid cells overlap a geometric shape based on its MBR.
+ * General format
+ * GridPartition(geom, gridMBR, gridSize)
+ * where:
+ * geom: the geometry to test
+ * gridMBR: the rectangle that defines the boundaries of the grid
+ * gridSize: number of rows and columns assuming a uniform grid
  * @author Ahmed Eldawy
  */
 public class GridPartition extends EvalFunc<DataBag> {
@@ -57,10 +62,10 @@ public class GridPartition extends EvalFunc<DataBag> {
     }
 
     
-    int col1 = (int) (Math.floor(geomX1 - gridX1) * gridSize / (gridX2 - gridX1));
-    int row1 = (int) (Math.floor(geomY1 - gridY1) * gridSize / (gridY2 - gridY1));
-    int col2 = (int) (Math.ceil(geomX2 - gridX1) * gridSize / (gridX2 - gridX1));
-    int row2 = (int) (Math.ceil(geomY2 - gridY1) * gridSize / (gridY2 - gridY1));
+    int col1 = (int) (Math.floor((geomX1 - gridX1) * gridSize / (gridX2 - gridX1)));
+    int row1 = (int) (Math.floor((geomY1 - gridY1) * gridSize / (gridY2 - gridY1)));
+    int col2 = (int) (Math.ceil((geomX2 - gridX1) * gridSize / (gridX2 - gridX1)));
+    int row2 = (int) (Math.ceil((geomY2 - gridY1) * gridSize / (gridY2 - gridY1)));
     
     for (int col = col1; col < col2; col++) {
       for (int row = row1; row < row2; row++) {

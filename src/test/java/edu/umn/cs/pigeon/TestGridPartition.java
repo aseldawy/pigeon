@@ -61,5 +61,32 @@ public class TestGridPartition extends TestCase {
     assertTrue(correctResult.isEmpty());
   }
 
+  public void testShouldWorkWithUnitGrid() throws Exception {
+    // Create polygons
+    ArrayList<String[]> data = new ArrayList<String[]>();
+    data.add(new String[] {"1", "LINESTRING(0.5 0.5, 1.5 1.5)"});
+    String datafile = TestHelper.createTempFile(data, "\t");
+    datafile = datafile.replace("\\", "\\\\");
+    PigServer pig = new PigServer(LOCAL);
+    String query = "A = LOAD 'file:" + datafile + "' as (id: int, geom);\n" +
+        "B = FOREACH A GENERATE id, FLATTEN("+
+        GridPartition.class.getName()+"(geom, 'MULTIPOINT(0 0, 5 5)', 1));";
+    pig.registerQuery(query);
+    Iterator<?> it = pig.openIterator("B");
+    
+    Vector<Point> correctResult = new Vector<Point>();
+    correctResult.add(new Point(1, 0));
+    
+    while (it.hasNext()) {
+      Tuple tuple = (Tuple) it.next();
+      if (tuple == null)
+        break;
+      Point resultPair = new Point((Integer)tuple.get(0), (Integer)tuple.get(1));
+      assertTrue("Could not find the pair "+resultPair,
+          correctResult.remove(resultPair));
+    }
+    assertTrue(correctResult.isEmpty());
+  }
+  
 }
 
