@@ -14,6 +14,7 @@ DEFINE ST_Envelope edu.umn.cs.pigeon.Envelope;
 DEFINE ST_Extent edu.umn.cs.pigeon.Extent;
 DEFINE ST_GeomFromWKB edu.umn.cs.pigeon.GeometryFromWKB;
 DEFINE ST_GeomFromText edu.umn.cs.pigeon.GeometryFromText;
+DEFINE ST_GridCell edu.umn.cs.pigeon.GridCell;
 DEFINE ST_GridPartition edu.umn.cs.pigeon.GridPartition;
 DEFINE ST_Intersection edu.umn.cs.pigeon.Intersection;
 DEFINE ST_Intersects edu.umn.cs.pigeon.Intersects;
@@ -46,11 +47,13 @@ DEFINE PBSM(dataset1, dataset2, geom1, geom2) RETURNS overlappingPairs {
   gridInfo = FOREACH gallmbrs GENERATE ST_Extent(allmbrs.mbr) AS gridMBR,
     (INT)CEIL(SQRT((DOUBLE)(COUNT(allmbrs))/10000.0)) AS gridSize;
   dataset1xgrid = CROSS dataset1_mbrs, gridInfo;
-  partitioned1 = FOREACH dataset1xgrid GENERATE *, FLATTEN(ST_GridPartition(tuple1.$geom1, gridMBR, gridSize)) AS cellid;
+  partitioned1 = FOREACH dataset1xgrid GENERATE *,
+    FLATTEN(ST_GridPartition(tuple1.$geom1, gridMBR, gridSize)) AS cellid;
   dataset2xgrid = CROSS dataset2_mbrs, gridInfo;
-  partitioned2 = FOREACH dataset2xgrid GENERATE *, FLATTEN(ST_GridPartition(tuple2.$geom2, gridMBR, gridSize)) AS cellid;
-  allpartitioned = COGROUP partitioned1 BY cellid, partitioned2 BY cellid;
+  partitioned2 = FOREACH dataset2xgrid GENERATE *,
+    FLATTEN(ST_GridPartition(tuple2.$geom2, gridMBR, gridSize)) AS cellid;
+  allpartitioned = COGROUP partitioned1 BY (cellid, gridMBR, gridSize), partitioned2 BY (cellid, gridMBR, gridSize);
   finalResult = FOREACH allpartitioned GENERATE FLATTEN
-    (ST_SJPlaneSweep(partitioned1.tuple1, partitioned2.tuple2, null, partitioned1.mbr1, partitioned2.mbr2));
+    (ST_SJPlaneSweep(partitioned1.tuple1, partitioned2.tuple2, ST_GridCell(group.cellid, group.gridMBR, group.gridSize), partitioned1.mbr1, partitioned2.mbr2));
   $overlappingPairs = FOREACH finalResult GENERATE FLATTEN(tuple1), FLATTEN(tuple2);
 };
