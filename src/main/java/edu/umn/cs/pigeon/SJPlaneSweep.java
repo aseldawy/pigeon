@@ -48,8 +48,8 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
   
   @Override
   public DataBag exec(Tuple input) throws IOException {
-    DataBag left = (DataBag) input.get(0);
-    DataBag right = (DataBag) input.get(1);
+    DataBag lRelation = (DataBag) input.get(0);
+    DataBag rRelation = (DataBag) input.get(1);
     
     boolean dupAvoidance = false;
     double mbrX1 = 0, mbrY1 = 0, mbrX2 = 0, mbrY2 = 0;
@@ -66,39 +66,71 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
         mbrY2 = Math.max(mbrCoords[0].y, mbrCoords[2].y);
       }
     }
-    // Retrieve the index of the geometry column in each bag
-    // -1 indicates that it is not specified by user and will be auto-detected
-    int lGeomColumn = input.size() > 3? (Integer) input.get(3) : -1;
-    int rGeomColumn = input.size() > 4? (Integer) input.get(4) : -1;
+    
+    Iterator<Tuple> irGeoms = null;
+    if (input.size() > 4 && input.get(4) instanceof DataBag) {
+      // User specified a column of values for right geometries
+      DataBag rGeoms = (DataBag) input.get(4);
+      if (rGeoms.size() != rRelation.size())
+        throw new ExecException(String.format(
+            "Mismatched sizes of right records column (%d) and geometry column (%d)",
+            rRelation.size(), rGeoms.size()));
+      irGeoms = rGeoms.iterator();
+    }
     
     // TODO ensure that the left bag is the smaller one for efficiency
-    if (left.size() > Integer.MAX_VALUE)
-      throw new ExecException("Size of left dataset is too large "+left.size());
+    if (lRelation.size() > Integer.MAX_VALUE)
+      throw new ExecException("Size of left dataset is too large "+lRelation.size());
     
     // Read all of the left dataset in memory
-    final Tuple[] lTuples = new Tuple[(int) left.size()];
+    final Tuple[] lTuples = new Tuple[(int) lRelation.size()];
     int leftSize = 0;
     tupleFactory = TupleFactory.getInstance();
-    for (Tuple t : left) {
+    for (Tuple t : lRelation) {
       lTuples[leftSize++] = tupleFactory.newTupleNoCopy(t.getAll());
     }
     
-    if (lGeomColumn == -1)
-      lGeomColumn = detectGeomColumn(lTuples[0]);
-    
     // Extract MBRs of objects for filter-refine approach
-    final double[] lx1 = new double[(int) left.size()];
-    final double[] ly1 = new double[(int) left.size()];
-    final double[] lx2 = new double[(int) left.size()];
-    final double[] ly2 = new double[(int) left.size()];
-    for (int i = 0; i < lTuples.length; i++) {
-      Geometry geom = geomParser.parseGeom(lTuples[i].get(lGeomColumn));
-      Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
-      lx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
-      ly1[i] = Math.min(mbrCoords[0].y, mbrCoords[2].y);
-      lx2[i] = Math.max(mbrCoords[0].x, mbrCoords[2].x);
-      ly2[i] = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+    final double[] lx1 = new double[(int) lRelation.size()];
+    final double[] ly1 = new double[(int) lRelation.size()];
+    final double[] lx2 = new double[(int) lRelation.size()];
+    final double[] ly2 = new double[(int) lRelation.size()];
+    
+    if (input.size() > 3 && input.get(3) instanceof DataBag) {
+      // User specified a column of values that contain the geometries
+      DataBag lGeoms = (DataBag) input.get(3);
+      if (lRelation.size() != lGeoms.size())
+        throw new ExecException(String.format(
+            "Mismatched sizes of left records column (%d) and geometry column (%d)",
+            lRelation.size(), lGeoms.size()));
+      Iterator<Tuple> ilGeoms = lGeoms.iterator();
+      for (int i = 0; i < lTuples.length; i++) {
+        Geometry geom = geomParser.parseGeom(ilGeoms.next().get(0));
+        Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
+        lx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
+        ly1[i] = Math.min(mbrCoords[0].y, mbrCoords[2].y);
+        lx2[i] = Math.max(mbrCoords[0].x, mbrCoords[2].x);
+        ly2[i] = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+      }
+    } else {
+      int lGeomColumn;
+      if (input.size() > 3 && input.get(3) instanceof Integer)
+        lGeomColumn = (Integer) input.get(3);
+      else if (input.size() > 3 && input.get(3) instanceof Long)
+        lGeomColumn = (int) ((long)(Long) input.get(3));
+      else
+        lGeomColumn = detectGeomColumn(lTuples[0]);
+        
+      for (int i = 0; i < lTuples.length; i++) {
+        Geometry geom = geomParser.parseGeom(lTuples[i].get(lGeomColumn));
+        Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
+        lx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
+        ly1[i] = Math.min(mbrCoords[0].y, mbrCoords[2].y);
+        lx2[i] = Math.max(mbrCoords[0].x, mbrCoords[2].x);
+        ly2[i] = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+      }
     }
+    
     // Sort left MBRs by x to prepare for the plane-sweep algorithm
     IndexedSortable lSortable = new IndexedSortable() {
       @Override
@@ -123,7 +155,7 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
     quickSort.sort(lSortable, 0, lTuples.length);
     
     // Retrieve objects from the right relation in batches and join with left
-    Iterator<Tuple> ri = right.iterator();
+    Iterator<Tuple> ri = rRelation.iterator();
     final int batchSize = 10000;
     final Tuple[] rTuples = new Tuple[batchSize];
     final double[] rx1 = new double[batchSize];
@@ -149,21 +181,33 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
     };
     int rSize = 0;
     DataBag output = BagFactory.getInstance().newDefaultBag();
+    int rGeomColumn = -1;
     while (ri.hasNext()) {
       rTuples[rSize++] = tupleFactory.newTupleNoCopy(ri.next().getAll());
       if (rSize == batchSize || !ri.hasNext()) {
         // Extract MBRs of geometries on the right
-        if (rGeomColumn == -1)
-          rGeomColumn = detectGeomColumn(rTuples[0]);
-        
-        for (int i = 0; i < rSize; i++) {
-          Geometry geom = geomParser.parseGeom(rTuples[i].get(rGeomColumn));
-          Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
-          rx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
-          ry1[i] = Math.min(mbrCoords[0].y, mbrCoords[2].y);
-          rx2[i] = Math.max(mbrCoords[0].x, mbrCoords[2].x);
-          ry2[i] = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+        if (irGeoms != null) {
+          for (int i = 0; i < rSize; i++) {
+            Geometry geom = geomParser.parseGeom(irGeoms.next().get(0));
+            Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
+            rx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
+            ry1[i] = Math.min(mbrCoords[0].y, mbrCoords[2].y);
+            rx2[i] = Math.max(mbrCoords[0].x, mbrCoords[2].x);
+            ry2[i] = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+          }          
+        } else {
+          if (rGeomColumn == -1)
+            rGeomColumn = detectGeomColumn(rTuples[0]);
+          for (int i = 0; i < rSize; i++) {
+            Geometry geom = geomParser.parseGeom(rTuples[i].get(rGeomColumn));
+            Coordinate[] mbrCoords = geom.getEnvelope().getCoordinates();
+            rx1[i] = Math.min(mbrCoords[0].x, mbrCoords[2].x);
+            ry1[i] = Math.min(mbrCoords[0].y, mbrCoords[2].y);
+            rx2[i] = Math.max(mbrCoords[0].x, mbrCoords[2].x);
+            ry2[i] = Math.max(mbrCoords[0].y, mbrCoords[2].y);
+          }
         }
+        
         
         // Perform the join now
         quickSort.sort(rSortable, 0, rSize);
@@ -188,9 +232,6 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
                   }
                 }
                 if (report) {
-//                  Geometry lGeom = geomParser.parseGeom(lTuples[i].get(lGeomColumn));
-//                  Geometry rGeom = geomParser.parseGeom(rTuples[jj].get(rGeomColumn));
-//                  if (lGeom.overlaps(rGeom))
                     addToAnswer(output, lTuples[i], rTuples[jj]);
                 }
               }
@@ -216,9 +257,6 @@ public class SJPlaneSweep extends EvalFunc<DataBag> {
                   }
                 }
                 if (report) {
-//                  Geometry lGeom = geomParser.parseGeom(lTuples[ii].get(lGeomColumn));
-//                  Geometry rGeom = geomParser.parseGeom(rTuples[j].get(rGeomColumn));
-//                  if (lGeom.overlaps(rGeom))
                     addToAnswer(output, lTuples[ii], rTuples[j]);
                 }
               }
