@@ -32,7 +32,7 @@ public class OGCGeometryToESRIShapeParser {
 
     System.arraycopy(shape, 0, shapeWithData, SIZE_WKID + SIZE_TYPE, shape.length);    
     System.arraycopy(intToBytes(wkid), 0, shapeWithData, 0, SIZE_WKID);
-    shapeWithData[SIZE_WKID] = (byte) type;
+    shapeWithData[SIZE_WKID] = (byte) geomType;
 
     return shapeWithData;
   }
