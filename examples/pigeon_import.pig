@@ -11,6 +11,8 @@ DEFINE ST_Crosses edu.umn.cs.pigeon.Crosses;
 DEFINE ST_Decompose edu.umn.cs.pigeon.Decompose;
 DEFINE ST_Difference edu.umn.cs.pigeon.Difference;
 DEFINE ST_Envelope edu.umn.cs.pigeon.Envelope;
+DEFINE ST_ESRIFromWKB edu.umn.cs.pigeon.ESRIShapeFromWKB;
+DEFINE ST_ESRIFromText edu.umn.cs.pigeon.ESRIShapeFromText;
 DEFINE ST_Extent edu.umn.cs.pigeon.Extent;
 DEFINE ST_GeomFromWKB edu.umn.cs.pigeon.GeometryFromWKB;
 DEFINE ST_GeomFromText edu.umn.cs.pigeon.GeometryFromText;
@@ -57,3 +59,4 @@ DEFINE PBSM(dataset1, dataset2, geom1, geom2) RETURNS overlappingPairs {
     (ST_SJPlaneSweep(partitioned1.tuple1, partitioned2.tuple2, ST_GridCell(group.cellid, group.gridMBR, group.gridSize), partitioned1.mbr1, partitioned2.mbr2));
   $overlappingPairs = FOREACH finalResult GENERATE FLATTEN(tuple1), FLATTEN(tuple2);
 };
+
