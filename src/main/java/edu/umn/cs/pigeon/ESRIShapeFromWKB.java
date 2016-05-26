@@ -12,22 +12,19 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
-
 /**
- * @author Tuan Pham
+ * @author Carlos Balduz
  *
  */
-public class GeometryFromWKB extends EvalFunc<DataByteArray> {
+public class ESRIShapeFromWKB extends EvalFunc<DataByteArray> {
     
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
               
     if (input.size() != 1) 
-        throw new IOException("GeometryFromWKB takes one bytearray argument");
-    
-    ESRIGeometryParser gp = new ESRIGeometryParser();
-    OGCGeometry geom = gp.parseGeom(input.get(0));
-    return new DataByteArray(geom.asBinary().array()); 
+        throw new IOException("ESRIShapeFromWKB takes one bytearray argument");
+
+    Object o = input.get(0);
+    return new DataByteArray(OGCGeometryToESRIShapeParser.ogcGeomToEsriShape(o)); 
   }
 }
