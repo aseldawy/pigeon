@@ -4,7 +4,7 @@
   <groupId>edu.umn.cs.spatialHadoop</groupId>
   <artifactId>pigeon</artifactId>
   <packaging>jar</packaging>
-  <version>0.2.1</version>
+  <version>0.2.2</version>
   <name>pigeon</name>
   <url>http://maven.apache.org</url>
   
