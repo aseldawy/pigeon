@@ -12,6 +12,7 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.data.Tuple;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.GeometryException;
 
 /**
  * Returns the Well-Known Binary (WKB) representation of a geometry object
@@ -27,8 +28,14 @@ public class AsHex extends EvalFunc<String> {
   public String exec(Tuple t) throws IOException {
     if (t.size() != 1)
       throw new IOException("AsHex expects one geometry argument");
-    OGCGeometry geom = geometryParser.parseGeom(t.get(0));
-    return ESRIGeometryParser.bytesToHex(geom.asBinary().array());
+
+    try {
+       OGCGeometry geom = geometryParser.parseGeom(t.get(0));
+       return ESRIGeometryParser.bytesToHex(geom.asBinary().array());
+    } catch(GeometryException e) {
+        throw new IOException("GeometryException: Unable to parse: " + t.get(0), e);
+    }
+
   }
 
 }
