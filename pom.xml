@@ -7,9 +7,31 @@
   <version>0.2.2</version>
   <name>pigeon</name>
   <url>http://maven.apache.org</url>
-  
 
-  <build>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:aseldawy/pigeon.git</connection>
+        <developerConnection>scm:git:git@github.com:aseldawy/pigeon.git</developerConnection>
+        <url>git@github.com:aseldawy/pigeon.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Ahmed Eldawy</name>
+            <email>eldawy@cs.ucr.edu</email>
+            <organization>University of California, Riverside</organization>
+            <organizationUrl>http://www.ucr.edu/</organizationUrl>
+        </developer>
+    </developers>
+
+
+    <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -20,11 +42,18 @@
           <target>1.6</target>
         </configuration>
       </plugin>
+
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.6</version>
+            <configuration>
+                <descriptors>
+                    <descriptor>src/main/assembly/assembly.xml</descriptor>
+                </descriptors>
+            </configuration>
+        </plugin>
     </plugins>
   </build>
-
-
-
 
   <dependencies>
 		<dependency>
@@ -56,13 +85,13 @@
 		<dependency>
 		  <groupId>com.esri.geometry</groupId>
 		  <artifactId>esri-geometry-api</artifactId>
-		  <version>1.2</version>
+		  <version>1.2.1</version>
 		</dependency>
 		
 		<dependency>
       <groupId>com.vividsolutions</groupId>
       <artifactId>jts</artifactId>
-      <version>1.8</version>
+      <version>1.13</version>
     </dependency>
     		
 
