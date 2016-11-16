@@ -54,6 +54,12 @@ public class GridPartition extends EvalFunc<DataBag> {
       // A special case for point
       geomX1 = geomX2 = geomCoords[0].x;
       geomY1 = geomY2 = geomCoords[0].y;
+    } else if (geomCoords.length == 2) {
+      // An orthogonal (horizontal or vertical) line
+      geomX1 = Math.min(geomCoords[0].x, geomCoords[1].x);
+      geomY1 = Math.min(geomCoords[0].y, geomCoords[1].y);
+      geomX2 = Math.max(geomCoords[0].x, geomCoords[1].x);
+      geomY2 = Math.max(geomCoords[0].y, geomCoords[1].y);
     } else {
       geomX1 = Math.min(geomCoords[0].x, geomCoords[2].x);
       geomY1 = Math.min(geomCoords[0].y, geomCoords[2].y);

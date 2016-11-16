@@ -185,7 +185,7 @@ public class TestSJPlaneSweep extends TestCase {
     String datafile = TestHelper.createTempFile(data, "\t");
     datafile = datafile.replace("\\", "\\\\");
     PigServer pig = new PigServer(LOCAL);
-    File import_file = new File("examples/pigeon_import.pig").getAbsoluteFile();
+    File import_file = new File("src/main/resources/pigeon_import.pig").getAbsoluteFile();
     String query = String.format("IMPORT '%s';\n", import_file.getPath()) +
       "A = LOAD 'file:" + datafile + "' as (gid: int, id: int, geom);\n" +
       "ldataset = FILTER A BY gid == 1;\n" +

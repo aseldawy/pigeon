@@ -31,6 +31,12 @@ public class XMax extends EvalFunc<Double> {
       Object v = input.get(0);
       Geometry geom = geometryParser.parseGeom(v);
       Coordinate[] coords = geom.getEnvelope().getCoordinates();
+      if (coords.length == 0)
+        throw new ExecException("XMax cannot work on empty geometires");
+      if (coords.length == 1)
+        return coords[0].x;
+      if (coords.length == 2)
+        return Math.max(coords[0].x, coords[1].x);
       return Math.max(coords[0].x, coords[2].x);
     } catch (ExecException ee) {
       throw ee;

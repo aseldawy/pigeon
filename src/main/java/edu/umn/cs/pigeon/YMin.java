@@ -31,6 +31,12 @@ public class YMin extends EvalFunc<Double> {
       Object v = input.get(0);
       Geometry geom = geometryParser.parseGeom(v);
       Coordinate[] coords = geom.getEnvelope().getCoordinates();
+      if (coords.length == 0)
+        throw new ExecException("YMin cannot work on empty geometires");
+      if (coords.length == 1)
+        return coords[0].y;
+      if (coords.length == 2)
+        return Math.min(coords[0].y, coords[1].y);
       return Math.min(coords[0].y, coords[2].y);
     } catch (ExecException ee) {
       throw ee;

@@ -27,14 +27,16 @@ public class XMin extends EvalFunc<Double> {
 
   @Override
   public Double exec(Tuple input) throws IOException {
-    try {
-      Object v = input.get(0);
-      Geometry geom = geometryParser.parseGeom(v);
-      Coordinate[] coords = geom.getEnvelope().getCoordinates();
-      return Math.min(coords[0].x, coords[2].x);
-    } catch (ExecException ee) {
-      throw ee;
-    }
+    Object v = input.get(0);
+    Geometry geom = geometryParser.parseGeom(v);
+    Coordinate[] coords = geom.getEnvelope().getCoordinates();
+    if (coords.length == 0)
+      throw new ExecException("XMin cannot work on empty geometires");
+    if (coords.length == 1)
+      return coords[0].x;
+    if (coords.length == 2)
+      return Math.min(coords[0].x, coords[1].x);
+    return Math.min(coords[0].x, coords[2].x);
   }
 
 }
