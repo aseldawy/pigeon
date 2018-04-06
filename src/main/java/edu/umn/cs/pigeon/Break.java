@@ -39,7 +39,7 @@ public class Break extends EvalFunc<DataBag>{
   @Override
   public DataBag exec(Tuple b) throws IOException {
     if (b.size() != 1)
-      throw new IOException("Invalid number of arguments. Expected 1 but found "+b.size());
+      throw new GeoException("Invalid number of arguments. Expected 1 but found "+b.size());
     Geometry geom = geometryParser.parseGeom(b.get(0));
     Vector<Coordinate[]> segments = new Vector<Coordinate[]>();
     breakGeom(geom, segments);

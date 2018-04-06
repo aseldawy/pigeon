@@ -27,9 +27,10 @@ public class YMax extends EvalFunc<Double> {
 
   @Override
   public Double exec(Tuple input) throws IOException {
+    Geometry geom = null;
     try {
       Object v = input.get(0);
-      Geometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       Coordinate[] coords = geom.getEnvelope().getCoordinates();
       if (coords.length == 0)
         throw new ExecException("YMax cannot work on empty geometires");
@@ -39,7 +40,7 @@ public class YMax extends EvalFunc<Double> {
         return Math.max(coords[0].y, coords[1].y);
       return Math.max(coords[0].y, coords[2].y);
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

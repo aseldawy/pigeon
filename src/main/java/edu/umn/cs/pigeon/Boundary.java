@@ -29,13 +29,14 @@ public class Boundary extends EvalFunc<DataByteArray> {
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
+    Geometry geom = null;
     try {
       Object v = input.get(0);
-      Geometry geom = GEOMETRY_PARSER.parseGeom(v);
+      geom = GEOMETRY_PARSER.parseGeom(v);
       Geometry boundary = geom.getBoundary();
       return new DataByteArray(WKB_WRITER.write(boundary));
-    } catch (ExecException ee) {
-      throw ee;
+    } catch (ExecException e) {
+      throw new GeoException(geom, e);
     }
   }
 

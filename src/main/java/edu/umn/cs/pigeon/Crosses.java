@@ -18,7 +18,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 
 /**
  * A UDF that returns the area of a geometry as calculated by
- * {@link Geometry#getArea()}
+ * {@link OGCGeometry#crosses(OGCGeometry)} ()}
  * @author Ahmed Eldawy
  *
  */
@@ -28,12 +28,13 @@ public class Crosses extends FilterFunc {
 
   @Override
   public Boolean exec(Tuple input) throws IOException {
+    OGCGeometry geom1 = null, geom2 = null;
     try {
-      OGCGeometry geom1 = geometryParser.parseGeom(input.get(0));
-      OGCGeometry geom2 = geometryParser.parseGeom(input.get(1));
+      geom1 = geometryParser.parseGeom(input.get(0));
+      geom2 = geometryParser.parseGeom(input.get(1));
       return geom1.crosses(geom2);
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom1, geom2, ee);
     }
   }
 

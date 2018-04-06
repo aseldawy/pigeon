@@ -18,7 +18,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 
 /**
  * A UDF that returns the spatial difference of two shapes as calculated by
- * {@link OGCGeometry#difference()}
+ * {@link OGCGeometry#difference(OGCGeometry)}
  * @author Ahmed Eldawy
  *
  */
@@ -28,12 +28,13 @@ public class Difference extends EvalFunc<DataByteArray> {
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
+    OGCGeometry geom1 = null, geom2 = null;
     try {
-      OGCGeometry geom1 = geometryParser.parseGeom(input.get(0));
-      OGCGeometry geom2 = geometryParser.parseGeom(input.get(1));
+      geom1 = geometryParser.parseGeom(input.get(0));
+      geom2 = geometryParser.parseGeom(input.get(1));
       return new DataByteArray(geom1.difference(geom2).asBinary().array());
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom1, geom2, ee);
     }
   }
 

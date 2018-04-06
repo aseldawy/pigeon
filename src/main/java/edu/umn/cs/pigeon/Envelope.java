@@ -29,13 +29,14 @@ public class Envelope extends EvalFunc<DataByteArray> {
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
+    Geometry geom = null;
     try {
       Object v = input.get(0);
-      Geometry geom = GEOMETRY_PARSER.parseGeom(v);
+      geom = GEOMETRY_PARSER.parseGeom(v);
       Geometry envelope = geom.getEnvelope();
       return new DataByteArray(WKB_WRITER.write(envelope));
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

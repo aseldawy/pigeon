@@ -21,9 +21,9 @@ import com.vividsolutions.jts.geom.Polygon;
 
 /**
  * Returns the size of a geometry in terms of number of points.
- * For {@link OGCPoint} it always returns one.
- * For {@link OGCLineString} it returns number of points.
- * For {@link OGCPolygon} it returns number of edges.
+ * For {@link Point} it always returns one.
+ * For {@link LineString} it returns number of points.
+ * For {@link Polygon} it returns number of edges.
  * @author Ahmed Eldawy
  *
  */
@@ -33,12 +33,13 @@ public class NumPoints extends EvalFunc<Integer> {
 
   @Override
   public Integer exec(Tuple input) throws IOException {
+    Geometry geom = null;
     try {
       Object v = input.get(0);
-      Geometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       return getGeometrySize(geom);
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
   
@@ -61,7 +62,7 @@ public class NumPoints extends EvalFunc<Integer> {
         size += getGeometrySize(coll.getGeometryN(i));
       return size;
     } else {
-      throw new ExecException("size() not defined for shapes of type: "+geom.getClass());
+      throw new GeoException("size() not defined for shapes of type: "+geom.getClass());
     }
   }
 

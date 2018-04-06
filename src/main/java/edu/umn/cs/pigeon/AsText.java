@@ -25,13 +25,12 @@ public class AsText extends EvalFunc<String> {
   @Override
   public String exec(Tuple t) throws IOException {
     if (t.size() != 1)
-      throw new IOException("ST_AsText expects one geometry argument");
+      throw new GeoException("ST_AsText expects one geometry argument");
     OGCGeometry geom = geometryParser.parseGeom(t.get(0));
     try {
       return geom.asText();
     } catch (Exception e) {
-      e.printStackTrace();
-      return "";
+      throw new GeoException(e);
     }
   }
 

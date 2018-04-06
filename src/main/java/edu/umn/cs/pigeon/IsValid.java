@@ -28,12 +28,13 @@ public class IsValid extends FilterFunc {
 
   @Override
   public Boolean exec(Tuple input) throws IOException {
+    Geometry geom = null;
     try {
       Object v = input.get(0);
-      Geometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       return geom.isValid();
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

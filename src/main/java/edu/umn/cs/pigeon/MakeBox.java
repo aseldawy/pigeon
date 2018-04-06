@@ -31,7 +31,7 @@ public class MakeBox extends EvalFunc<DataByteArray> {
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
     if (input.size() != 4)
-      throw new IOException("MakeBox takes four numerical arguments");
+      throw new GeoException("MakeBox takes four numerical arguments");
     double x1 = ESRIGeometryParser.parseDouble(input.get(0));
     double y1 = ESRIGeometryParser.parseDouble(input.get(1));
     double x2 = ESRIGeometryParser.parseDouble(input.get(2));

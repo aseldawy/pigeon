@@ -18,7 +18,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 
 /**
  * A UDF that returns the area of a geometry as calculated by
- * {@link Geometry#getArea()}
+ * {@link Geometry#calculateArea2D()}
  * @author Ahmed Eldawy
  *
  */
@@ -28,12 +28,13 @@ public class Area extends EvalFunc<Double> {
 
   @Override
   public Double exec(Tuple input) throws IOException {
+    OGCGeometry geom = null;
     try {
       Object v = input.get(0);
-      OGCGeometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       return geom.getEsriGeometry().calculateArea2D();
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

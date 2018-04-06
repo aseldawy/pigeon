@@ -36,10 +36,12 @@ public class ConvexHull extends EvalFunc<DataByteArray> implements Algebraic {
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
+    OGCGeometry geom = null;
     try {
-      if (input.get(0) instanceof DataBag)
+      if (input.get(0) instanceof DataBag) {
         return new DataByteArray(convexHull(input).asBinary().array());
-      OGCGeometry geom = geometryParser.parseGeom(input.get(0));
+      }
+      geom = geometryParser.parseGeom(input.get(0));
       try {
         return new DataByteArray(geom.convexHull().asBinary().array());
       } catch (ArrayIndexOutOfBoundsException e) {
@@ -47,11 +49,9 @@ public class ConvexHull extends EvalFunc<DataByteArray> implements Algebraic {
         throw new RuntimeException(geom.asText(), e);
       }
     } catch (GeometryException e) {
-      e.printStackTrace();
-      throw new RuntimeException(input.toString(), e);
+      throw new GeoException(geom, e);
     } catch (ArrayIndexOutOfBoundsException e) {
-      e.printStackTrace();
-      throw new RuntimeException(input.toString(), e);
+      throw new GeoException(geom, e);
     }
   }
 

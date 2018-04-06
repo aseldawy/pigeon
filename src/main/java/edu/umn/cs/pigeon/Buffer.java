@@ -27,9 +27,10 @@ public class Buffer extends EvalFunc<DataByteArray> {
 
   @Override
   public DataByteArray exec(Tuple input) throws IOException {
+    OGCGeometry geom = null;
     try {
       Object v = input.get(0);
-      OGCGeometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       double dist;
       Object distance = input.get(1);
       if (distance instanceof Double)
@@ -45,10 +46,10 @@ public class Buffer extends EvalFunc<DataByteArray> {
       else if (distance instanceof DataByteArray)
         dist = Double.parseDouble(new String(((DataByteArray) distance).get()));
       else
-        throw new RuntimeException("Invalid second argument in call to Buffer. Expecting Double, Integer or Long");
+        throw new GeoException("Invalid second argument in call to Buffer. Expecting Double, Integer or Long");
       return new DataByteArray(geom.buffer(dist).asBinary().array());
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

@@ -6,6 +6,7 @@
  *******************************************************************/
 package edu.umn.cs.pigeon;
 
+import com.vividsolutions.jts.io.WKBWriter;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 
@@ -33,6 +34,7 @@ public class JTSGeometryParser {
   
   private final WKTReader wkt_reader = new WKTReader();
   private final WKBReader wkb_reader = new WKBReader();
+  private final WKBWriter wkb_writer = new WKBWriter();
   
   public Geometry parseGeom(Object o) throws ExecException {
     if (o == null)
@@ -82,5 +84,9 @@ public class JTSGeometryParser {
     if (o instanceof DataByteArray)
       return Double.parseDouble(new String(((DataByteArray) o).get()));
     throw new RuntimeException("Cannot parse "+o+" into double");
+  }
+
+  public DataByteArray geomToBytes(Geometry geom) {
+    return new DataByteArray(wkb_writer.write(geom));
   }
 }

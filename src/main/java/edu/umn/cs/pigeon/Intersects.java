@@ -26,12 +26,13 @@ public class Intersects extends FilterFunc {
 
   @Override
   public Boolean exec(Tuple input) throws IOException {
+    OGCGeometry geom1 = null, geom2 = null;
     try {
-      OGCGeometry geom1 = geometryParser.parseGeom(input.get(0));
-      OGCGeometry geom2 = geometryParser.parseGeom(input.get(1));
+      geom1 = geometryParser.parseGeom(input.get(0));
+      geom2 = geometryParser.parseGeom(input.get(1));
       return geom1.intersects(geom2);
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom1, geom2, ee);
     }
   }
 

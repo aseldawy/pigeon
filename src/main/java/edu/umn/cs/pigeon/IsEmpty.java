@@ -27,12 +27,13 @@ public class IsEmpty extends FilterFunc {
 
   @Override
   public Boolean exec(Tuple input) throws IOException {
+    OGCGeometry geom = null;
     try {
       Object v = input.get(0);
-      OGCGeometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       return geom.isEmpty();
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

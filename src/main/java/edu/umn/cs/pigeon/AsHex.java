@@ -26,7 +26,7 @@ public class AsHex extends EvalFunc<String> {
   @Override
   public String exec(Tuple t) throws IOException {
     if (t.size() != 1)
-      throw new IOException("AsHex expects one geometry argument");
+      throw new GeoException("AsHex expects one geometry argument");
     OGCGeometry geom = geometryParser.parseGeom(t.get(0));
     return ESRIGeometryParser.bytesToHex(geom.asBinary().array());
   }

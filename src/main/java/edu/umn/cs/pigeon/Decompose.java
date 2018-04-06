@@ -51,7 +51,7 @@ public class Decompose extends EvalFunc<DataBag> {
     Geometry geom = geometryParser.parseGeom(b.get(0));
     int threshold = b.size() == 1? DefaultThreshold : (Integer)b.get(1);
     if (threshold < 4)
-      throw new ExecException("Size threshold must be at least 4");
+      throw new GeoException("Size threshold must be at least 4");
     DataBag output = BagFactory.getInstance().newDefaultBag();
     Stack<Geometry> toDecompose = new Stack<Geometry>();
     toDecompose.push(geom);
@@ -77,7 +77,6 @@ public class Decompose extends EvalFunc<DataBag> {
   /**
    * Decomposes a geometry into smaller one.
    * @param geom
-   * @param threshold
    * @return
    */
   public Geometry[] decompose(Geometry geom) {

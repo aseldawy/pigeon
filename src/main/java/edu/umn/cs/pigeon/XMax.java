@@ -27,9 +27,10 @@ public class XMax extends EvalFunc<Double> {
 
   @Override
   public Double exec(Tuple input) throws IOException {
+    Geometry geom = null;
     try {
       Object v = input.get(0);
-      Geometry geom = geometryParser.parseGeom(v);
+      geom = geometryParser.parseGeom(v);
       Coordinate[] coords = geom.getEnvelope().getCoordinates();
       if (coords.length == 0)
         throw new ExecException("XMax cannot work on empty geometires");
@@ -39,7 +40,7 @@ public class XMax extends EvalFunc<Double> {
         return Math.max(coords[0].x, coords[1].x);
       return Math.max(coords[0].x, coords[2].x);
     } catch (ExecException ee) {
-      throw ee;
+      throw new GeoException(geom, ee);
     }
   }
 

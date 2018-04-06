@@ -67,7 +67,7 @@ public class Connect extends EvalFunc<DataByteArray>{
           firstPointId.add(first_point_id);
           lastPointId.add(last_point_id);
         } else {
-          throw new ExecException("Cannot connect shapes of type "+geom.getClass());
+          throw new GeoException("Cannot connect shapes of type "+geom.getClass());
         }
         
       }
@@ -179,11 +179,10 @@ public class Connect extends EvalFunc<DataByteArray>{
         OGCGeometryCollection collection = new OGCConcreteGeometryCollection(createdShapes, createdShapes.get(0).getEsriSpatialReference());
         return new DataByteArray(collection.asBinary().array());
       } else {
-      throw new ExecException("No shapes to connect");
+      throw new GeoException("No shapes to connect");
       }
     } catch (Exception e) {
-      e.printStackTrace();
-      return null;
+      throw new GeoException(e);
     }
   }
 
