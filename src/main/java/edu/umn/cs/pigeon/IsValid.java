@@ -34,7 +34,12 @@ public class IsValid extends FilterFunc {
       geom = geometryParser.parseGeom(v);
       return geom.isValid();
     } catch (ExecException ee) {
-      throw new GeoException(geom, ee);
+      return false;
+    } catch (IllegalArgumentException iae) {
+      // ParseGeom can throw an IllegalArgumentException 
+      // (e.g., java.lang.IllegalArgumentException: Invalid number of points 
+      // in LinearRing (found 3 - must be 0 or >= 4))
+      return false;
     }
   }
 
