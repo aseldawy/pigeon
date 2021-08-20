@@ -1,7 +1,7 @@
 package edu.umn.cs.pigeon;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.pig.backend.executionengine.ExecException;
 
 /**

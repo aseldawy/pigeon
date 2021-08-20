@@ -6,14 +6,14 @@
  *******************************************************************/
 package edu.umn.cs.pigeon;
 
-import com.vividsolutions.jts.io.WKBWriter;
+import org.locationtech.jts.io.WKBWriter;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBReader;
-import com.vividsolutions.jts.io.WKTReader;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKBReader;
+import org.locationtech.jts.io.WKTReader;
 
 /**
  * Retrieves a geometry from a pig attribute. It detects the type of the column
